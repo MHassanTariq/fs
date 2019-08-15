@@ -1,7 +1,7 @@
-const webpack = require('webpack')
-const path = require('path')
-const nodeExternals = require('webpack-node-externals')
-const StartServerPlugin = require('start-server-webpack-plugin')
+const webpack = require('webpack');
+const path = require('path');
+const nodeExternals = require('webpack-node-externals');
+const StartServerPlugin = require('start-server-webpack-plugin');
 
 module.exports = {
     entry: [
@@ -35,4 +35,4 @@ module.exports = {
         path: path.join(__dirname, 'prod/server'),
         filename: 'server.js'
     }
-}
+};

@@ -4,6 +4,8 @@ const fs = require('fs');
 
 module.exports = function(deployer) {
 
+    // hard-coded value, based on wallet seed
+    // this is account #1 (#0 is deployer)
     let firstAirline = '0xf17f52151EbEF6C7334FAD080c5704D77216b732';
     deployer.deploy(FlightSuretyData)
     .then(() => {
@@ -15,9 +17,9 @@ module.exports = function(deployer) {
                             dataAddress: FlightSuretyData.address,
                             appAddress: FlightSuretyApp.address
                         }
-                    }
-                    fs.writeFileSync(__dirname + '/../src/dapp/config.json',JSON.stringify(config, null, '\t'), 'utf-8');
-                    fs.writeFileSync(__dirname + '/../src/server/config.json',JSON.stringify(config, null, '\t'), 'utf-8');
+                    };
+                    fs.writeFileSync(__dirname + '/../src/dapp/config.json',JSON.stringify(config, null, '  '), 'utf-8');
+                    fs.writeFileSync(__dirname + '/../src/server/config.json',JSON.stringify(config, null, '  '), 'utf-8');
                 });
     });
-}
+};
