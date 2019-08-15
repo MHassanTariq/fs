@@ -32,6 +32,10 @@ contract FlightSuretyData {
     /********************************************************************************************/
 
 
+    event AirlineSentFunds(address airline, uint256 amount, uint256 totalsent);
+    event AirlineRegistered(address airline, string name);
+    event AirlineFunded(address airline, string name);
+
     /**
      * @dev Constructor
      *      The deploying account becomes contractOwner
@@ -43,6 +47,7 @@ contract FlightSuretyData {
         first.isRegistered = true;
         airlines[address_] = first;
         numAirlines = numAirlines.add(1);
+        emit AirlineRegistered(address_, name_);
     }
 
     /********************************************************************************************/
@@ -146,15 +151,17 @@ contract FlightSuretyData {
     function registerAirline(address sender, address address_, string calldata name_)
         external
         requireIsOperational()
-        requireAppCaller()
         requireFundedAirline(sender)
         returns (bool, uint256)
     {
+        require(appContracts[msg.sender], "Caller is not authorized");
+
         if (numFundedAirlines < 4) {
             Airline memory a = newAirline(address_, name_);
             a.isRegistered = true;
             airlines[address_] = a;
             numAirlines = numAirlines.add(1);
+            emit AirlineRegistered(address_, name_);
             return (true, 0);
         }
 
@@ -254,8 +261,22 @@ contract FlightSuretyData {
      *      resulting in insurance payouts, the contract should be self-sustaining
      *
      */
-    function fund() public payable
+    function fund(address address_, uint256 amount) external payable
+        requireIsOperational()
+        requireAppCaller()
+        requireRegisteredAirline(address_)
+        returns (bool)
     {
+        airlines[address_].amountFunded = airlines[address_].amountFunded.add(amount);
+        totalFunds = totalFunds.add(amount);
+        emit AirlineSentFunds(address_, amount, airlines[address_].amountFunded);
+        if (airlines[address_].amountFunded >= 10 ether) {
+            airlines[address_].isFunded = true;
+            numFundedAirlines = numFundedAirlines.add(1);
+            emit AirlineFunded(address_, airlines[address_].name);
+        }
+
+        return airlines[address_].isFunded;
     }
 
     function getFlightKey(address airline, string memory flight, uint256 timestamp)
@@ -289,6 +310,7 @@ contract FlightSuretyData {
      */
     function() external payable
     {
-        fund();
+        // FIXME: figure this out
+        totalFunds = totalFunds.add(msg.value);
     }
 }
