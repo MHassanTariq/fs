@@ -132,6 +132,7 @@ contract FlightSuretyData {
      */
     function registerAirline(address sender, address address_, string calldata name_)
         external
+        requireIsOperational
         requireAppCaller()
         requireFundedAirline(sender)
         returns (bool, uint256)
