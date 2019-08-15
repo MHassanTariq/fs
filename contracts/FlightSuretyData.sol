@@ -9,9 +9,14 @@ contract FlightSuretyData {
     /*                                       DATA VARIABLES                                     */
     /********************************************************************************************/
 
-    address private contractOwner;                                      // Account used to deploy contract
-    bool private operational = true;                                    // Blocks all state changes throughout the contract if false
-    mapping(address => uint256) private appContracts;                   // Only authorized app contracts can call this contract.
+    address private contractOwner;                              // Account used to deploy contract
+    bool private operational = true;                            // Blocks all state changes throughout the contract if false
+    mapping(address => bool) private appContracts;              // Only authorized app contracts can call this contract.
+    mapping(address => bool) private registeredAirlines;        // registered airlines
+    mapping(address => bool) private fundedAirlines;            // airlines that have funded the contract
+    mapping(address => uint256) private registrationQueue;      // airlines in the queue
+    uint256 numAirlines = 0;
+    uint256 numFundedAirlines = 0;
 
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
@@ -22,9 +27,11 @@ contract FlightSuretyData {
      * @dev Constructor
      *      The deploying account becomes contractOwner
      */
-    constructor() public
+    constructor(address firstAirline) public
     {
         contractOwner = msg.sender;
+        registeredAirlines[firstAirline] = true;
+        numAirlines++;
     }
 
     /********************************************************************************************/
@@ -59,9 +66,19 @@ contract FlightSuretyData {
      */
     modifier requireAppCaller()
     {
-        require(appContracts[msg.sender] == 1, "Caller is not authorized");
+        require(appContracts[msg.sender], "Caller is not authorized");
         _;
     }
+
+    /**
+     * @dev Modifier that requires the function caller be a registered airline that has paid up
+     */
+    modifier requireFundedAirline(address airline)
+    {
+        require(fundedAirlines[airline], "Caller is not a registered airline");
+        _;
+    }
+
 
     /********************************************************************************************/
     /*                                       UTILITY FUNCTIONS                                  */
@@ -97,9 +114,59 @@ contract FlightSuretyData {
      *      Can only be called from FlightSuretyApp contract
      *
      */
-    function registerAirline() external requireAppCaller() view
+    function registerAirline(address sender, address airline)
+        external
+        requireAppCaller()
+        requireFundedAirline(sender)
+        returns (bool, uint256)
     {
+        if (numFundedAirlines < 4) {
+            registeredAirlines[airline] = true;
+            numAirlines++;
+            return (true, 0);
+        }
+
+        // new airline?  add it to the queue
+        // in the queue already?
+        // if so, increment its vote
+        // if the vote is >= fundedAirlines/2, promote it to registered
+        uint256 votes = registrationQueue[airline];
+        if (votes == 0) {
+            registrationQueue[airline] = 1;
+            return (false, 1);
+        }
+
+        registrationQueue[airline] += 1;
+        if (registrationQueue[airline] >= numFundedAirlines.div(2)) {
+            registeredAirlines[airline] = true;
+            numAirlines++;
+            delete registrationQueue[airline];
+            return (true, 0);
+        } else {
+            return (false, votes+1);
+        }
     }
+
+    /**
+     * @dev Is the airline registered?  Returns (true or false, number of airlines)
+     *      Can only be called from FlightSuretyApp contract
+     *
+     */
+    function isAirlineRegistered(address airline) external view requireAppCaller() returns (bool, uint256)
+    {
+        return (registeredAirlines[airline], numAirlines);
+    }
+
+    /**
+     * @dev Is the airline funded?  Returns (true or false, number of funded airlines)
+     *      Can only be called from FlightSuretyApp contract
+     *
+     */
+    function isAirlineFunded(address airline) external view requireAppCaller() returns (bool, uint256)
+    {
+        return (fundedAirlines[airline], numFundedAirlines);
+    }
+
 
     /**
      * @dev Buy insurance for a flight
@@ -147,7 +214,7 @@ contract FlightSuretyData {
 
     function authorizeCaller(address app) external requireContractOwner
     {
-        appContracts[app] = 1;
+        appContracts[app] = true;
     }
 
     /**

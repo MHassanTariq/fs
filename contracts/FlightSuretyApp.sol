@@ -65,6 +65,7 @@ contract FlightSuretyApp {
         _;
     }
 
+
     /********************************************************************************************/
     /*                                       CONSTRUCTOR                                        */
     /********************************************************************************************/
@@ -97,11 +98,11 @@ contract FlightSuretyApp {
      * @dev Add an airline to the registration queue
      *
      */
-    function registerAirline() external pure returns(bool success, uint256 votes)
+    function registerAirline(address airline) external returns(bool success, uint256 votes)
     {
-        return (success, 0);
+        return dataContract.registerAirline(msg.sender, airline);
+        // return (success, 0);
     }
-
 
     /**
      * @dev Register a future flight for insuring.

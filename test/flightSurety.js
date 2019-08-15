@@ -1,10 +1,10 @@
-let Test = require('../config/testConfig.js');
-var BigNumber = require('bignumber.js');
+const Test = require("../config/testConfig.js");
+const BigNumber = require("bignumber.js");
 
-contract('Flight Surety Tests', async (accounts) => {
+contract("Flight Surety Tests", async (accounts) => {
 
     var config;
-    before('setup contract', async () => {
+    before("setup contract", async () => {
         config = await Test.Config(accounts);
         await config.flightSuretyData.authorizeCaller(config.flightSuretyApp.address);
     });
@@ -70,7 +70,7 @@ contract('Flight Surety Tests', async (accounts) => {
 
     });
 
-    it('(airline) cannot register an Airline using registerAirline() if it is not funded', async () => {
+    it("(airline) cannot register an Airline using registerAirline() if it is not funded", async () => {
 
         // ARRANGE
         let newAirline = accounts[2];
