@@ -39,7 +39,7 @@ contract FlightSuretyData {
         Airline memory first = newAirline(address_, name_);
         first.isRegistered = true;
         airlines[address_] = first;
-        numAirlines++;
+        numAirlines = numAirlines.add(1);
     }
 
     /********************************************************************************************/
@@ -140,7 +140,7 @@ contract FlightSuretyData {
             Airline memory a = newAirline(address_, name_);
             a.isRegistered = true;
             airlines[address_] = a;
-            numAirlines++;
+            numAirlines = numAirlines.add(1);
             return (true, 0);
         }
 
@@ -153,7 +153,7 @@ contract FlightSuretyData {
             Airline memory a = newAirline(address_, name_);
             a.isRegistered = false;
             airlines[address_] = a;
-            numAirlines++;
+            numAirlines = numAirlines.add(1);
             registrationQueue[address_] = 1;
             return (false, 1);
         }
