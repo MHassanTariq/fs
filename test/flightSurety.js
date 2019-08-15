@@ -1,15 +1,14 @@
 const Test = require("../config/testConfig.js");
-const assertRevert = require('./utils/assertRevert').assertRevert;
-
-const fiveEther = web3.utils.toWei("5", "ether");
 
 contract("Flight Surety Tests", async (accounts) => {
 
-    var config;
+    let config;
     before("setup contract", async () => {
         config = await Test.Config(accounts);
         await config.flightSuretyData.authorizeCaller(config.flightSuretyApp.address);
     });
+
+    const fiveEther = web3.utils.toWei("5", "ether");
 
     /****************************************************************************************/
     /* Operations and Settings                                                              */
@@ -59,14 +58,14 @@ contract("Flight Surety Tests", async (accounts) => {
         await config.flightSuretyData.setOperatingStatus(false);
 
         let reverted = false;
-        try
-        {
-            // await config.flightSuretyApp.fundAirline({from: config.firstAirline, value: fiveEther});
-            throw true;
+        try {
+            await config.flightSuretyData.fundAirline(config.firstAirline, fiveEther,
+                                                      {from: config.flightSuretyApp.address});
         }
-        catch(e) {
+        catch (e) {
             reverted = true;
         }
+
         assert.equal(reverted, true, "Access not blocked for requireIsOperational");
 
         // Set it back for other tests to work
@@ -98,7 +97,6 @@ contract("Flight Surety Tests", async (accounts) => {
         assert.equal(result[0], false, "Airline has not sent enough ether to be funded");
     });
 
-    /*
     it("(airline) cannot register an Airline using registerAirline() if it is not funded", async () => {
 
         // ARRANGE
@@ -107,8 +105,7 @@ contract("Flight Surety Tests", async (accounts) => {
 
         // ACT
         try {
-            await config.flightSuretyApp.registerAirline(newAirline, "Air 2",
-                                                         {from: config.firstAirline});
+            await config.flightSuretyApp.registerAirline.call(newAirline, "Air 2", {from: config.firstAirline});
         }
         catch(e) {
             reverted = true;
@@ -118,12 +115,10 @@ contract("Flight Surety Tests", async (accounts) => {
         let result = await config.flightSuretyData.isAirline.call(newAirline,
                                                                   {from: config.flightSuretyApp.address});
 
-        // ASSERT
         assert.equal(result, false, "Airline should not be able to register another airline if it hasn't provided funding");
     });
-*/
 
-    it("(airline) is funded if it sends more than 10 ether", async () => {
+    it("(airline) is funded if it sends 10 or more more ether", async () => {
         // have already sent 5 ether
         let tx = await config.flightSuretyApp.fundAirline({from: config.firstAirline, value: fiveEther});
         let result = await config.flightSuretyData.isAirlineFunded.call(config.firstAirline,
