@@ -16,11 +16,12 @@ contract FlightSuretyData {
         bool isFunded;
     }
 
-    address private contractOwner;                              // Account used to deploy contract
-    bool private operational = true;                            // Blocks all state changes throughout the contract if false
-    mapping(address => bool) private appContracts;              // Only authorized app contracts can call this contract.
-    mapping(address => Airline) private airlines;               // registered airlines
-    mapping(address => uint256) private registrationQueue;      // airlines in the queue
+    address private contractOwner;                      // Account used to deploy contract
+    bool private operational = true;                    // Blocks all state changes throughout the contract if false
+    mapping(address => bool) private appContracts;      // Only authorized app contracts can call this contract.
+    mapping(address => Airline) private airlines;       // registered airlines
+    mapping(address => uint256) private votes;          // airlines in the queue and their votes
+    mapping(address => address[]) private voters;       // count of voters for an airline
     uint256 numAirlines = 0;
     uint256 numFundedAirlines = 0;
 
@@ -149,23 +150,38 @@ contract FlightSuretyData {
         // in the queue already?
         // if so, increment its vote
         // if the vote is >= fundedAirlines/2, promote it to registered
-        uint256 votes = registrationQueue[address_];
-        if (votes == 0) {
+        uint256 numVotes = votes[address_];
+        if (numVotes == 0) {
             Airline memory a = newAirline(address_, name_);
             a.isRegistered = false;
             airlines[address_] = a;
+            voters[address_] = new address[](0);
+            voters[address_].push(msg.sender);
             numAirlines = numAirlines.add(1);
-            registrationQueue[address_] = 1;
+            votes[address_] = 1;
             return (false, 1);
         }
 
-        registrationQueue[address_] += 1;
-        if (registrationQueue[address_] >= numFundedAirlines.div(2)) {
+        // has msg.sender voted for this airline before?
+        address[] memory voted = voters[address_];
+        bool found = false;
+        for (uint idx = 0; idx < voted.length; idx++) {
+            if (msg.sender == voted[idx]) {
+                found = true;
+                break;
+            }
+        }
+
+        require(!found, "Have already voted for this airline");
+
+        votes[address_] = votes[address_].add(1);
+        if (votes[address_] >= numFundedAirlines.div(2)) {
             airlines[address_].isRegistered = true;
-            delete registrationQueue[address_];
+            delete votes[address_];
+            delete voters[address_];
             return (true, 0);
         } else {
-            return (false, votes+1);
+            return (false, numVotes+1);
         }
     }
 
@@ -223,8 +239,8 @@ contract FlightSuretyData {
     }
 
     function getFlightKey(address airline, string memory flight, uint256 timestamp)
-        pure
         internal
+        pure
         returns(bytes32)
     {
         return keccak256(abi.encodePacked(airline, flight, timestamp));
