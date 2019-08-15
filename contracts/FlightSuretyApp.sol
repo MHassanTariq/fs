@@ -4,7 +4,8 @@ pragma solidity ^0.5.11;
 // OpenZeppelin's SafeMath library, when used correctly, protects agains such bugs
 // More info: https://www.nccgroup.trust/us/about-us/newsroom-and-events/blog/2018/november/smart-contract-insecurity-bad-arithmetic/
 
-import "../node_modules/openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "node_modules/openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "contracts/FlightSuretyData.sol";
 
 /************************************************** */
 /* FlightSurety Smart Contract                      */
@@ -25,6 +26,7 @@ contract FlightSuretyApp {
     uint8 private constant STATUS_CODE_LATE_OTHER = 50;
 
     address private contractOwner;          // Account used to deploy contract
+    FlightSuretyData private dataContract;  // Contract that holds all the data
 
     struct Flight {
         bool isRegistered;
@@ -71,9 +73,10 @@ contract FlightSuretyApp {
      * @dev Contract constructor
      *
      */
-    constructor() public
+    constructor(address payable dataContract_) public
     {
         contractOwner = msg.sender;
+        dataContract = FlightSuretyData(dataContract_);
     }
 
     /********************************************************************************************/

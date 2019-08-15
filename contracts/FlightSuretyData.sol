@@ -1,6 +1,6 @@
 pragma solidity ^0.5.11;
 
-import "../node_modules/openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "node_modules/openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract FlightSuretyData {
     using SafeMath for uint256;
@@ -11,6 +11,7 @@ contract FlightSuretyData {
 
     address private contractOwner;                                      // Account used to deploy contract
     bool private operational = true;                                    // Blocks all state changes throughout the contract if false
+    mapping(address => uint256) private appContracts;                   // Only authorized app contracts can call this contract.
 
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
@@ -53,6 +54,15 @@ contract FlightSuretyData {
         _;
     }
 
+    /**
+     * @dev Modifier that requires the app contract(s) to be the caller
+     */
+    modifier requireAppCaller()
+    {
+        require(appContracts[msg.sender] == 1, "Caller is not authorized");
+        _;
+    }
+
     /********************************************************************************************/
     /*                                       UTILITY FUNCTIONS                                  */
     /********************************************************************************************/
@@ -87,7 +97,7 @@ contract FlightSuretyData {
      *      Can only be called from FlightSuretyApp contract
      *
      */
-    function registerAirline() external pure
+    function registerAirline() external requireAppCaller() view
     {
     }
 
@@ -129,6 +139,23 @@ contract FlightSuretyData {
         returns(bytes32)
     {
         return keccak256(abi.encodePacked(airline, flight, timestamp));
+    }
+
+    /**
+     * @dev Add an app contract that can call into this contract
+     */
+
+    function authorizeCaller(address app) external requireContractOwner
+    {
+        appContracts[app] = 1;
+    }
+
+    /**
+     * @dev Add an app contract that can call into this contract
+     */
+    function deauthorizeCaller(address app) external requireContractOwner
+    {
+        delete appContracts[app];
     }
 
     /**
