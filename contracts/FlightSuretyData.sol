@@ -9,11 +9,17 @@ contract FlightSuretyData {
     /*                                       DATA VARIABLES                                     */
     /********************************************************************************************/
 
+    struct Airline {
+        address airline;
+        string name;
+        bool isRegistered;
+        bool isFunded;
+    }
+
     address private contractOwner;                              // Account used to deploy contract
     bool private operational = true;                            // Blocks all state changes throughout the contract if false
     mapping(address => bool) private appContracts;              // Only authorized app contracts can call this contract.
-    mapping(address => bool) private registeredAirlines;        // registered airlines
-    mapping(address => bool) private fundedAirlines;            // airlines that have funded the contract
+    mapping(address => Airline) private airlines;               // registered airlines
     mapping(address => uint256) private registrationQueue;      // airlines in the queue
     uint256 numAirlines = 0;
     uint256 numFundedAirlines = 0;
@@ -27,10 +33,12 @@ contract FlightSuretyData {
      * @dev Constructor
      *      The deploying account becomes contractOwner
      */
-    constructor(address firstAirline) public
+    constructor(address address_, string memory name_) public
     {
         contractOwner = msg.sender;
-        registeredAirlines[firstAirline] = true;
+        Airline memory first = newAirline(address_, name_);
+        first.isRegistered = true;
+        airlines[address_] = first;
         numAirlines++;
     }
 
@@ -75,7 +83,7 @@ contract FlightSuretyData {
      */
     modifier requireFundedAirline(address airline)
     {
-        require(fundedAirlines[airline], "Caller is not a registered airline");
+        require(airlines[airline].isFunded, "Caller is not a funded airline");
         _;
     }
 
@@ -105,6 +113,14 @@ contract FlightSuretyData {
         operational = mode;
     }
 
+    /**
+     * @dev Create a new airline
+     */
+    function newAirline(address account, string memory name_) internal pure returns (Airline memory)
+    {
+        return Airline({airline: account, name: name_, isRegistered: false, isFunded: false});
+    }
+
     /********************************************************************************************/
     /*                                     SMART CONTRACT FUNCTIONS                             */
     /********************************************************************************************/
@@ -114,14 +130,16 @@ contract FlightSuretyData {
      *      Can only be called from FlightSuretyApp contract
      *
      */
-    function registerAirline(address sender, address airline)
+    function registerAirline(address sender, address address_, string calldata name_)
         external
         requireAppCaller()
         requireFundedAirline(sender)
         returns (bool, uint256)
     {
         if (numFundedAirlines < 4) {
-            registeredAirlines[airline] = true;
+            Airline memory a = newAirline(address_, name_);
+            a.isRegistered = true;
+            airlines[address_] = a;
             numAirlines++;
             return (true, 0);
         }
@@ -130,17 +148,20 @@ contract FlightSuretyData {
         // in the queue already?
         // if so, increment its vote
         // if the vote is >= fundedAirlines/2, promote it to registered
-        uint256 votes = registrationQueue[airline];
+        uint256 votes = registrationQueue[address_];
         if (votes == 0) {
-            registrationQueue[airline] = 1;
+            Airline memory a = newAirline(address_, name_);
+            a.isRegistered = false;
+            airlines[address_] = a;
+            numAirlines++;
+            registrationQueue[address_] = 1;
             return (false, 1);
         }
 
-        registrationQueue[airline] += 1;
-        if (registrationQueue[airline] >= numFundedAirlines.div(2)) {
-            registeredAirlines[airline] = true;
-            numAirlines++;
-            delete registrationQueue[airline];
+        registrationQueue[address_] += 1;
+        if (registrationQueue[address_] >= numFundedAirlines.div(2)) {
+            airlines[address_].isRegistered = true;
+            delete registrationQueue[address_];
             return (true, 0);
         } else {
             return (false, votes+1);
@@ -152,9 +173,9 @@ contract FlightSuretyData {
      *      Can only be called from FlightSuretyApp contract
      *
      */
-    function isAirlineRegistered(address airline) external view requireAppCaller() returns (bool, uint256)
+    function isAirlineRegistered(address address_) external view requireAppCaller() returns (bool, uint256)
     {
-        return (registeredAirlines[airline], numAirlines);
+        return (airlines[address_].isRegistered, numAirlines);
     }
 
     /**
@@ -162,9 +183,9 @@ contract FlightSuretyData {
      *      Can only be called from FlightSuretyApp contract
      *
      */
-    function isAirlineFunded(address airline) external view requireAppCaller() returns (bool, uint256)
+    function isAirlineFunded(address address_) external view requireAppCaller() returns (bool, uint256)
     {
-        return (fundedAirlines[airline], numFundedAirlines);
+        return (airlines[address_].isFunded, numFundedAirlines);
     }
 
 

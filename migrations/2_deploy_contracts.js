@@ -7,7 +7,8 @@ module.exports = function(deployer) {
     // hard-coded value, based on wallet seed
     // this is account #1 (#0 is deployer)
     let firstAirline = '0xf17f52151EbEF6C7334FAD080c5704D77216b732';
-    return deployer.deploy(FlightSuretyData, firstAirline)
+    let firstAirlineName = 'Airplane!';
+    return deployer.deploy(FlightSuretyData, firstAirline, firstAirlineName)
         .then(() => {
             return deployer.deploy(FlightSuretyApp, FlightSuretyData.address);
         })
