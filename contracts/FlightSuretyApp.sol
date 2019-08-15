@@ -105,6 +105,15 @@ contract FlightSuretyApp {
     }
 
     /**
+     * @dev Fund an airline
+     * Returns true if the airline is now funded (has received 10 ether).
+     */
+    function fundAirline() public payable returns (bool)
+    {
+        return dataContract.fund(msg.sender, msg.value);
+    }
+
+    /**
      * @dev Register a future flight for insuring.
      *
      */

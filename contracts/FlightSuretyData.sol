@@ -14,6 +14,7 @@ contract FlightSuretyData {
         string name;
         bool isRegistered;
         bool isFunded;
+        uint256 amountFunded;
     }
 
     address private contractOwner;                      // Account used to deploy contract
@@ -21,9 +22,10 @@ contract FlightSuretyData {
     mapping(address => bool) private appContracts;      // Only authorized app contracts can call this contract.
     mapping(address => Airline) private airlines;       // registered airlines
     mapping(address => uint256) private votes;          // airlines in the queue and their votes
-    mapping(address => address[]) private voters;       // count of voters for an airline
-    uint256 numAirlines = 0;
-    uint256 numFundedAirlines = 0;
+    mapping(address => address[]) private voters;       // list of voters for an airline
+    uint256 numAirlines = 0;                            // number of registered airlines
+    uint256 numFundedAirlines = 0;                      // number of funded airlines
+    uint256 private totalFunds = 0;                     // total funds available
 
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
@@ -80,6 +82,16 @@ contract FlightSuretyData {
     }
 
     /**
+     * @dev Modifier that requires the function caller be a registered airline
+     */
+    modifier requireRegisteredAirline(address airline)
+    {
+        require(airlines[airline].isRegistered, "Caller is not a registered airline");
+        _;
+    }
+
+
+    /**
      * @dev Modifier that requires the function caller be a registered airline that has paid up
      */
     modifier requireFundedAirline(address airline)
@@ -119,7 +131,7 @@ contract FlightSuretyData {
      */
     function newAirline(address account, string memory name_) internal pure returns (Airline memory)
     {
-        return Airline({airline: account, name: name_, isRegistered: false, isFunded: false});
+        return Airline({airline: account, name: name_, isRegistered: false, isFunded: false, amountFunded: 0});
     }
 
     /********************************************************************************************/
@@ -133,7 +145,7 @@ contract FlightSuretyData {
      */
     function registerAirline(address sender, address address_, string calldata name_)
         external
-        requireIsOperational
+        requireIsOperational()
         requireAppCaller()
         requireFundedAirline(sender)
         returns (bool, uint256)
@@ -179,10 +191,19 @@ contract FlightSuretyData {
             airlines[address_].isRegistered = true;
             delete votes[address_];
             delete voters[address_];
+            emit AirlineRegistered(address_, airlines[address_].name);
             return (true, 0);
         } else {
             return (false, numVotes+1);
         }
+    }
+
+    /**
+     * @dev Is the airline known to the contract?  Returns true or false.
+     */
+    function isAirline(address address_) external view requireAppCaller() returns (bool)
+    {
+        return (airlines[address_].airline == address_);
     }
 
     /**
@@ -204,7 +225,6 @@ contract FlightSuretyData {
     {
         return (airlines[address_].isFunded, numFundedAirlines);
     }
-
 
     /**
      * @dev Buy insurance for a flight
