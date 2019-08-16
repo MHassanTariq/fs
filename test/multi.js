@@ -123,8 +123,8 @@ contract("Airline Registration and Multiparty Consensus Tests", async (accounts)
         airlineNumber++;
         await config.flightSuretyApp.registerAirline(sixth, `Air ${airlineNumber}`, {from: sixth});
 
-        let r5 = await config.flightSuretyApp.numVotes.call(fifth, {from: fifth});
-        let r6 = await config.flightSuretyApp.numVotes.call(fifth, {from: second});
+        let r5 = await config.flightSuretyApp.numVotes.call(fifth);
+        let r6 = await config.flightSuretyApp.numVotes.call(fifth);
 
         assert.equal(r5, 0, "Airline registering itself should not have any votes");
         assert.equal(r6, 0, "Airline registering itself should not have any votes");
@@ -135,8 +135,24 @@ contract("Airline Registration and Multiparty Consensus Tests", async (accounts)
 
         let r5 = await config.flightSuretyApp.hasVoted.call(fifth, {from: fifth});
 
-        assert.equal(r5, false, "Airline registered by funded airline should not its own vote");
+        assert.equal(r5, false, "Airline registered by itself should not store its own vote");
     });
+
+
+    it("airline registered in multiparty mode by itself does not increment vote count", async () => {
+        let sixth = accounts[6];
+
+        await config.flightSuretyApp.registerAirline(sixth, "", {from: sixth});
+        await config.flightSuretyApp.registerAirline(sixth, "", {from: sixth});
+        await config.flightSuretyApp.registerAirline(sixth, "", {from: sixth});
+        await config.flightSuretyApp.registerAirline(sixth, "", {from: sixth});
+        await config.flightSuretyApp.registerAirline(sixth, "", {from: sixth});
+
+        let r6 = await config.flightSuretyApp.numVotes.call(sixth);
+
+        assert.equal(r6, 0, "Airline registered by itself has zero votes, no matter how many times it calls registerAirline");
+    });
+
 
     it("airline registered in multiparty mode by funded airline has one vote", async () => {
         let second = accounts[2];
@@ -202,5 +218,40 @@ contract("Airline Registration and Multiparty Consensus Tests", async (accounts)
 
         let numfunded = await config.flightSuretyData.numFundedAirlines.call();
         assert.equal(numfunded, 4, `Number of funded airlines is wrong: ${numfunded}`);
+    });
+
+    it("can register an airline using the multiparty system", async () => {
+        let second = accounts[2];
+        let third = accounts[3];
+        let fourth = accounts[4];
+        let fifth = accounts[5];
+
+        // correct number of votes before we start
+        let votes = await config.flightSuretyApp.numVotes.call(fifth);
+        assert(votes, 0, "Airline 5 should have zero votes");
+
+        let numfunded = await config.flightSuretyData.numFundedAirlines.call();
+        assert.equal(numfunded, 4, `Number of funded airlines is wrong: ${numfunded}`);
+
+        // we don't need a name the second time registerAirline is called
+        await config.flightSuretyApp.registerAirline(fifth, "", {from: second});
+
+        votes = await config.flightSuretyApp.numVotes.call(fifth);
+        assert(votes, 1, "Airline 5 should have one vote");
+
+        await config.flightSuretyApp.registerAirline(fifth, "", {from: third});
+
+        // at this point, the airline should still not be registered
+        let reg = await config.flightSuretyData.isAirlineRegistered.call(fifth,
+                                                                         {from: config.flightSuretyApp.address});
+        assert.equal(reg[0], false, "Airline should not be registered");
+
+        await config.flightSuretyApp.registerAirline(fifth, "", {from: fourth});
+
+        // at this point, the airline should be registered
+        // at this point, the airline should be registered
+        reg = await config.flightSuretyData.isAirlineRegistered.call(fifth,
+                                                                         {from: config.flightSuretyApp.address});
+        assert.equal(reg[0], true, "Airline should not be registered");
     });
 });

@@ -1,4 +1,4 @@
-PARTIAL -- Smart Contract Seperation
+DONE -- Smart Contract Seperation
 
 Smart Contract code is separated into multiple contracts:
 
@@ -35,13 +35,13 @@ DONE -- Airline Contract Initialization
 
 First airline is registered when contract is deployed.
 
-PARTIAL -- Multiparty Consensus [ remove requireRegisteredAirline() on registerAirline if numFunded > 4 ]
+DONE -- Multiparty Consensus
 
 Only existing airline may register a new airline until there are at least four airlines registered
 
 Demonstrated either with Truffle test or by making call from client Dapp
 
-NEEDS TESTING -- Multiparty Consensus
+DONE -- Multiparty Consensus
 
 Registration of fifth and subsequent airlines requires multi-party consensus of 50% of registered airlines
 
