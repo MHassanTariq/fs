@@ -31,12 +31,12 @@ let Config = async function(accounts) {
     ];
 
 
-    let owner = accounts[0];
-    let firstAirline = accounts[1];
-    let firstAirlineName = "Airplane!";
+    const owner = accounts[0];
+    const firstAirline = accounts[1];
+    const firstAirlineName = "Airplane!";
 
-    let flightSuretyData = await FlightSuretyData.new(firstAirline, firstAirlineName);
-    let flightSuretyApp = await FlightSuretyApp.new(flightSuretyData.address);
+    const flightSuretyData = await FlightSuretyData.new(firstAirline, firstAirlineName);
+    const flightSuretyApp = await FlightSuretyApp.new(flightSuretyData.address);
 
 
     return {
