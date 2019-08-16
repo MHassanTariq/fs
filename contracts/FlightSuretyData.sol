@@ -136,6 +136,9 @@ contract FlightSuretyData {
      */
     function newAirline(address account, string memory name_) internal pure returns (Airline memory)
     {
+        // the airline must have a name if we are registering it
+        require(keccak256(abi.encodePacked(name_)) != keccak256(abi.encodePacked("")),
+                "Airline must have a name");
         return Airline({airline: account, name: name_, isRegistered: false, isFunded: false, amountFunded: 0});
     }
 
@@ -173,18 +176,14 @@ contract FlightSuretyData {
     {
         require(appContracts[msg.sender], "Caller is not authorized");
 
+        // cannot re-register a registered airline
+        require(!airlines[address_].isRegistered, "Airline is already registered");
+
+        // with fewer than four funded airlines, an existing funded airline can add
+        // the new airline
         if (numFundedAirlines < 4) {
             require(airlines[registeringAirline].isFunded, "Caller is not a funded airline");
-        }
 
-        // the airline must have a name
-        require(keccak256(abi.encodePacked(name_)) != keccak256(abi.encodePacked("")),
-                "Airline must have a name");
-
-        // cannot re-register a registered airline
-        require(airlines[address_].airline != address_, "Airline is already registered");
-
-        if (numFundedAirlines < 4) {
             Airline memory a = newAirline(address_, name_);
             a.isRegistered = true;
             airlines[address_] = a;
@@ -193,8 +192,10 @@ contract FlightSuretyData {
             return (true, 0);
         }
 
-        // after 4 airlines are registered, we are in multiparty mode
-        // an airline can register itself, or a funded airline can register an airline
+        // after 4 airlines are funded, we are in multiparty mode
+        // an airline can add itself, or a funded airline can add an airline
+        // however, the added airline is not considered "registered" until
+        // numFundedAirlines/2 airlines have voted for it.
 
         if (registeringAirline != address_) {
             // an unfunded airline cannot register another airline
@@ -213,13 +214,11 @@ contract FlightSuretyData {
             require(!found, "Have already voted for this airline");
         }
 
-        uint256 totalVotes = votes[address_];
+        Airline memory a = airlines[address_];
 
-        // new airline?  add it to the queue
-        if (totalVotes == 0) {
-            Airline memory a = newAirline(address_, name_);
-            // mark it registered after it has been "voted in"
-            a.isRegistered = false;
+        // new airline
+        if (a.airline != address_) {
+            a = newAirline(address_, name_);
             airlines[address_] = a;
             voters[address_] = new address[](0);
             // if the registering airline is a funded airline, add 1 vote
@@ -231,10 +230,17 @@ contract FlightSuretyData {
             return (false, 1);
         }
 
-        // in the queue already? increment its vote count
-        // if the vote is >= fundedAirlines/2, promote it to registered
-        votes[address_] = votes[address_].add(1);
-        if (votes[address_] >= numFundedAirlines.div(2)) {
+        uint256 totalVotes = votes[address_];
+
+        // in the queue already? increment its vote count if a funded airline called register
+        // when the vote is > fundedAirlines/2, promote it to registered
+
+        if (airlines[registeringAirline].isFunded) {
+            voters[address_].push(registeringAirline);
+            votes[address_] = votes[address_].add(1);
+        }
+
+        if (votes[address_] > numFundedAirlines.div(2)) {
             airlines[address_].isRegistered = true;
             delete votes[address_];
             delete voters[address_];
