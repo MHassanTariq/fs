@@ -113,6 +113,16 @@ contract FlightSuretyApp {
         return dataContract.fund(msg.sender, msg.value);
     }
 
+    function hasVoted(address airline) public view returns (bool)
+    {
+        return dataContract.hasVoted(msg.sender, airline);
+    }
+
+    function numVotes(address airline) public view returns (uint256)
+    {
+        return dataContract.numVotes(airline);
+    }
+
     /**
      * @dev Register a future flight for insuring.
      *

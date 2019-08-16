@@ -23,8 +23,8 @@ contract FlightSuretyData {
     mapping(address => Airline) private airlines;   // registered airlines
     mapping(address => uint256) private votes;      // airlines in the queue and their votes
     mapping(address => address[]) private voters;   // list of voters for an airline
-    uint256 numAirlines;                            // number of registered airlines
-    uint256 numFundedAirlines;                      // number of funded airlines
+    uint256 public numAirlines;                     // number of airlines, registered or unregistered
+    uint256 public numFundedAirlines;               // number of funded airlines
     uint256 private totalFunds;                     // total funds available
 
     /********************************************************************************************/
@@ -139,6 +139,24 @@ contract FlightSuretyData {
         return Airline({airline: account, name: name_, isRegistered: false, isFunded: false, amountFunded: 0});
     }
 
+    function hasVoted(address votingAirline, address airline) public view requireAppCaller() returns (bool)
+    {
+        address[] memory voted = voters[airline];
+
+        for (uint idx = 0; idx < voted.length; idx++) {
+            if (votingAirline == voted[idx]) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function numVotes(address airline) public view requireAppCaller() returns (uint256)
+    {
+        return votes[airline];
+    }
+
     /********************************************************************************************/
     /*                                     SMART CONTRACT FUNCTIONS                             */
     /********************************************************************************************/
@@ -148,13 +166,23 @@ contract FlightSuretyData {
      *      Can only be called from FlightSuretyApp contract
      *
      */
-    function registerAirline(address sender, address address_, string calldata name_)
+    function registerAirline(address registeringAirline, address address_, string calldata name_)
         external
         requireIsOperational()
-        requireFundedAirline(sender)
         returns (bool, uint256)
     {
         require(appContracts[msg.sender], "Caller is not authorized");
+
+        if (numFundedAirlines < 4) {
+            require(airlines[registeringAirline].isFunded, "Caller is not a funded airline");
+        }
+
+        // the airline must have a name
+        require(keccak256(abi.encodePacked(name_)) != keccak256(abi.encodePacked("")),
+                "Airline must have a name");
+
+        // cannot re-register a registered airline
+        require(airlines[address_].airline != address_, "Airline is already registered");
 
         if (numFundedAirlines < 4) {
             Airline memory a = newAirline(address_, name_);
@@ -165,34 +193,46 @@ contract FlightSuretyData {
             return (true, 0);
         }
 
+        // after 4 airlines are registered, we are in multiparty mode
+        // an airline can register itself, or a funded airline can register an airline
+
+        if (registeringAirline != address_) {
+            // an unfunded airline cannot register another airline
+            require(airlines[registeringAirline].isFunded, "Caller is not a funded airline");
+
+            // has registeringAirline voted for this airline before?
+            address[] memory voted = voters[address_];
+            bool found = false;
+            for (uint idx = 0; idx < voted.length; idx++) {
+                if (registeringAirline == voted[idx]) {
+                    found = true;
+                    break;
+                }
+            }
+
+            require(!found, "Have already voted for this airline");
+        }
+
+        uint256 totalVotes = votes[address_];
+
         // new airline?  add it to the queue
-        // in the queue already?
-        // if so, increment its vote
-        // if the vote is >= fundedAirlines/2, promote it to registered
-        uint256 numVotes = votes[address_];
-        if (numVotes == 0) {
+        if (totalVotes == 0) {
             Airline memory a = newAirline(address_, name_);
+            // mark it registered after it has been "voted in"
             a.isRegistered = false;
             airlines[address_] = a;
             voters[address_] = new address[](0);
-            voters[address_].push(msg.sender);
+            // if the registering airline is a funded airline, add 1 vote
+            if (airlines[registeringAirline].isFunded) {
+                voters[address_].push(registeringAirline);
+                votes[address_] = 1;
+            }
             numAirlines = numAirlines.add(1);
-            votes[address_] = 1;
             return (false, 1);
         }
 
-        // has msg.sender voted for this airline before?
-        address[] memory voted = voters[address_];
-        bool found = false;
-        for (uint idx = 0; idx < voted.length; idx++) {
-            if (msg.sender == voted[idx]) {
-                found = true;
-                break;
-            }
-        }
-
-        require(!found, "Have already voted for this airline");
-
+        // in the queue already? increment its vote count
+        // if the vote is >= fundedAirlines/2, promote it to registered
         votes[address_] = votes[address_].add(1);
         if (votes[address_] >= numFundedAirlines.div(2)) {
             airlines[address_].isRegistered = true;
@@ -201,7 +241,7 @@ contract FlightSuretyData {
             emit AirlineRegistered(address_, airlines[address_].name);
             return (true, 0);
         } else {
-            return (false, numVotes+1);
+            return (false, totalVotes+1);
         }
     }
 
