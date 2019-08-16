@@ -17,15 +17,15 @@ contract FlightSuretyData {
         uint256 amountFunded;
     }
 
-    address private contractOwner;                      // Account used to deploy contract
-    bool private operational = true;                    // Blocks all state changes throughout the contract if false
-    mapping(address => bool) private appContracts;      // Only authorized app contracts can call this contract.
-    mapping(address => Airline) private airlines;       // registered airlines
-    mapping(address => uint256) private votes;          // airlines in the queue and their votes
-    mapping(address => address[]) private voters;       // list of voters for an airline
-    uint256 numAirlines = 0;                            // number of registered airlines
-    uint256 numFundedAirlines = 0;                      // number of funded airlines
-    uint256 private totalFunds = 0;                     // total funds available
+    address private contractOwner;                  // Account used to deploy contract
+    bool private operational = true;                // Blocks all state changes throughout the contract if false
+    mapping(address => bool) private appContracts;  // Only authorized app contracts can call this contract.
+    mapping(address => Airline) private airlines;   // registered airlines
+    mapping(address => uint256) private votes;      // airlines in the queue and their votes
+    mapping(address => address[]) private voters;   // list of voters for an airline
+    uint256 numAirlines;                            // number of registered airlines
+    uint256 numFundedAirlines;                      // number of funded airlines
+    uint256 private totalFunds;                     // total funds available
 
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
