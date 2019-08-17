@@ -123,6 +123,17 @@ contract FlightSuretyApp {
         return dataContract.numVotes(airline);
     }
 
+
+    function isRegistered(address airline) public view returns (bool, uint256)
+    {
+        return dataContract.isAirlineRegistered(airline);
+    }
+
+    function isFunded(address airline) public view returns (bool, uint256)
+    {
+        return dataContract.isAirlineFunded(airline);
+    }
+
     /**
      * @dev Register a future flight for insuring.
      *
