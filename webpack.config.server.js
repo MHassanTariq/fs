@@ -3,8 +3,12 @@ const path = require('path');
 const nodeExternals = require('webpack-node-externals');
 const StartServerPlugin = require('start-server-webpack-plugin');
 
+require('babel-polyfill');
+
+
 module.exports = {
     entry: [
+        'babel-polyfill',
         'webpack/hot/poll?1000',
         './src/server/index'
     ],
