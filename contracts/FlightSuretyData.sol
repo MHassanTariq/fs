@@ -184,12 +184,11 @@ contract FlightSuretyData {
         if (numFundedAirlines < 4) {
             require(airlines[registeringAirline].isFunded, "Caller is not a funded airline");
 
-            airlines[address_] = newAirline(address_, name_);
-            airlines[address_].isRegistered = true;
+            Airline memory a = newAirline(address_, name_);
+            a.isRegistered = true;
+            airlines[address_] = a;
             numAirlines = numAirlines.add(1);
-
             emit AirlineRegistered(address_, name_);
-
             return (true, 0);
         }
 
@@ -219,7 +218,8 @@ contract FlightSuretyData {
 
         // new airline
         if (a.airline != address_) {
-            airlines[address_] = newAirline(address_, name_);
+            a = newAirline(address_, name_);
+            airlines[address_] = a;
             voters[address_] = new address[](0);
             // if the registering airline is a funded airline, add 1 vote
             if (airlines[registeringAirline].isFunded) {
@@ -230,24 +230,24 @@ contract FlightSuretyData {
             return (false, 1);
         }
 
-        // in the queue already? increment its vote count if a funded
-        // airline called register
+        uint256 totalVotes = votes[address_];
+
+        // in the queue already? increment its vote count if a funded airline called register
+        // when the vote is > fundedAirlines/2, promote it to registered
+
         if (airlines[registeringAirline].isFunded) {
             voters[address_].push(registeringAirline);
             votes[address_] = votes[address_].add(1);
         }
 
-        // when the vote is > fundedAirlines/2, promote it to registered
         if (votes[address_] > numFundedAirlines.div(2)) {
             airlines[address_].isRegistered = true;
             delete votes[address_];
             delete voters[address_];
-
             emit AirlineRegistered(address_, airlines[address_].name);
-
             return (true, 0);
         } else {
-            return (false, votes[address_]);
+            return (false, totalVotes+1);
         }
     }
 
@@ -315,9 +315,7 @@ contract FlightSuretyData {
     {
         airlines[address_].amountFunded = airlines[address_].amountFunded.add(amount);
         totalFunds = totalFunds.add(amount);
-
         emit AirlineSentFunds(address_, amount, airlines[address_].amountFunded);
-
         if (airlines[address_].amountFunded >= 10 ether) {
             airlines[address_].isFunded = true;
             numFundedAirlines = numFundedAirlines.add(1);
