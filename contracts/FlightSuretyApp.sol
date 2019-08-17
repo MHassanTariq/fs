@@ -207,7 +207,7 @@ contract FlightSuretyApp {
     // Event fired when flight status request is submitted
     // Oracles track this and if they have a matching index
     // they fetch data and submit a response
-    event OracleRequest(uint8 index, address airline, string flight, uint256 timestamp);
+    event OracleRequest(uint8 indexed index, address airline, string flight, uint256 timestamp);
 
     // Register an oracle with the contract
     function registerOracle() external payable
@@ -255,7 +255,6 @@ contract FlightSuretyApp {
             processFlightStatus(airline, flight, timestamp, statusCode);
         }
     }
-
 
     function getFlightKey(address airline, string memory flight, uint256 timestamp) internal pure returns(bytes32)
     {
