@@ -1,6 +1,6 @@
 const Test = require("../config/testConfig.js");
 
-contract("Flight registration Tests", async (accounts) => {
+contract("Flight Registration Tests", async (accounts) => {
 
     let config;
     before("setup contract", async () => {
