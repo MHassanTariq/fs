@@ -103,9 +103,7 @@ contract FlightSuretyApp {
     function fundAirline() public payable returns (bool)
     {
         bool funded = dataContract.fund(msg.sender, msg.value);
-        if (funded) {
-            address(dataContract).transfer(msg.value);
-        }
+        address(dataContract).transfer(msg.value);
 
         return funded;
     }
