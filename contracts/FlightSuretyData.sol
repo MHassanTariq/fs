@@ -57,6 +57,8 @@ contract FlightSuretyData {
     event AirlineRegistered(address airline, string name);
     event AirlineFunded(address airline, string name);
 
+    event FlightRegistered(address airline, string name, uint256 timestamp, bytes32 key);
+
     /**
      * @dev Constructor
      *      The deploying account becomes contractOwner
@@ -316,6 +318,8 @@ contract FlightSuretyData {
 
         Flight memory f = Flight({name: name_, isRegistered: true, statusCode: 0, updatedTimestamp: timestamp, airline: airline_});
         flights[key] = f;
+
+        emit FlightRegistered(airline_, name_, timestamp, key);
 
         return key;
     }
