@@ -17,15 +17,36 @@ contract FlightSuretyData {
         uint256 amountFunded;
     }
 
+    struct Flight {
+        string name;
+        bool isRegistered;
+        uint8 statusCode;
+        uint256 updatedTimestamp;
+        address airline;
+    }
+
+    mapping(bytes32 => Flight) private flights;     // flight key (airline, flight, timestamp) to flight details
+
+    // contract
     address private contractOwner;                  // Account used to deploy contract
     bool private operational = true;                // Blocks all state changes throughout the contract if false
     mapping(address => bool) private appContracts;  // Only authorized app contracts can call this contract.
+
+    // airlines
     mapping(address => Airline) private airlines;   // registered airlines
     mapping(address => uint256) private votes;      // airlines in the queue and their votes
     mapping(address => address[]) private voters;   // list of voters for an airline
     uint256 public numAirlines;                     // number of airlines, registered or unregistered
     uint256 public numFundedAirlines;               // number of funded airlines
+
+    // funds, should match web3.eth.getBalance(data contract's account);
     uint256 private totalFunds;                     // total funds available
+
+    // passenger insurance
+    mapping(address => uint256) private insurance;     // map passenger -> amount paid
+    mapping(address => uint256) private payout;        // map passenger -> amount to be paid out
+    mapping(bytes32 => address[]) private passengers;  // map flight key -> passengers
+
 
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
@@ -277,6 +298,26 @@ contract FlightSuretyData {
     function isAirlineFunded(address address_) external view requireAppCaller() returns (bool, uint256)
     {
         return (airlines[address_].isFunded, numFundedAirlines);
+    }
+
+    function registerFlight(address airline_, string calldata name_, uint256 timestamp)
+        external
+        requireIsOperational()
+        requireAppCaller()
+        requireFundedAirline(airline_)
+        returns (bytes32)
+    {
+        bytes32 key = getFlightKey(airline_, name_, timestamp);
+
+        if (flights[key].isRegistered && flights[key].statusCode == 0) {
+            // nothing to do, already registered and has no flight data
+            return key;
+        }
+
+        Flight memory f = Flight({name: name_, isRegistered: true, statusCode: 0, updatedTimestamp: timestamp, airline: airline_});
+        flights[key] = f;
+
+        return key;
     }
 
     /**

@@ -6,6 +6,7 @@ import FlightSuretyApp from "../../build/contracts/FlightSuretyApp.json";
 import Config from "./config.json";
 import Web3 from "web3";
 import express from "express";
+import Flights from "../../flights.json";
 
 const config = Config["localhost"];
 
@@ -96,6 +97,22 @@ async function setupAirlines(req, res)
     return res.json({status: "okay", "events": did}).end();
 }
 
+
+async function setupFlights(req, res)
+{
+    const accounts = await web3.eth.getAccounts();
+    let did = [];
+
+    // each airline gets two flights
+    for (let i = 0; i <= Flights.length-1; i++) {
+        let address = accounts[1+Math.floor(i/2)];
+        let flight = Flights[i];
+        console.log(`airline ${address} flight: ${flight.name}`);
+        did.push(`airline ${address} flight: ${flight.name}`);
+    }
+    return res.json({status: "okay", "events": did}).end();
+}
+
 // setup oracles and have them listen for events
 async function setupOracles(req, res)
 {
@@ -139,6 +156,7 @@ app.get("/api", (req, res) => {
 });
 
 app.post("/airlines", setupAirlines);
+app.post("/flights", setupFlights);
 app.post("/oracles", setupOracles);
 
 export default app;

@@ -29,14 +29,6 @@ contract FlightSuretyApp {
     address private contractOwner;          // Account used to deploy contract
     FlightSuretyData private dataContract;  // Contract that holds all the data
 
-    struct Flight {
-        bool isRegistered;
-        uint8 statusCode;
-        uint256 updatedTimestamp;
-        address airline;
-    }
-    mapping(bytes32 => Flight) private flights;
-
 
     /********************************************************************************************/
     /*                                       FUNCTION MODIFIERS                                 */
@@ -142,8 +134,9 @@ contract FlightSuretyApp {
      * @dev Register a future flight for insuring.
      *
      */
-    function registerFlight() external pure
+    function registerFlight(string memory flight, uint256 timestamp) public returns (bytes32)
     {
+        return dataContract.registerFlight(msg.sender, flight, timestamp);
     }
 
     /**
