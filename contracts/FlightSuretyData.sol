@@ -61,6 +61,7 @@ contract FlightSuretyData {
 
     event FlightRegistered(address airline, string name, uint256 timestamp, bytes32 key);
     event InsuranceBought(address passenger, string name, bytes32 key, uint amount);
+    event PayableInsurance(address passenger, string name, uint amount);
 
     /**
      * @dev Constructor
@@ -376,7 +377,6 @@ contract FlightSuretyData {
         flights[key].statusCode = statusCode;
     }
 
-
     /**
      *  @dev Credits payouts to insurees
      */
@@ -395,6 +395,7 @@ contract FlightSuretyData {
                 uint refund = insurance[ikey].mul(3).div(2);
                 payouts[ps[idx]] = payouts[ps[idx]].add(refund);
                 insurance[ikey] = 0;
+                emit PayableInsurance(ps[idx], flight, payouts[ps[idx]]);
             }
         }
         passengers[key] = new address[](0);
