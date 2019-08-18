@@ -285,6 +285,7 @@ contract FlightSuretyData {
      */
     function buy() external payable
     {
+
     }
 
     /**
@@ -292,6 +293,7 @@ contract FlightSuretyData {
      */
     function creditInsurees() external pure
     {
+
     }
 
     /**
@@ -300,6 +302,7 @@ contract FlightSuretyData {
      */
     function pay() external pure
     {
+
     }
 
     /**
@@ -356,7 +359,6 @@ contract FlightSuretyData {
      */
     function() external payable
     {
-        // FIXME: figure this out
-        totalFunds = totalFunds.add(msg.value);
+
     }
 }

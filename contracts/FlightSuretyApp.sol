@@ -110,7 +110,12 @@ contract FlightSuretyApp {
      */
     function fundAirline() public payable returns (bool)
     {
-        return dataContract.fund(msg.sender, msg.value);
+        bool funded = dataContract.fund(msg.sender, msg.value);
+        if (funded) {
+            address(dataContract).transfer(msg.value);
+        }
+
+        return funded;
     }
 
     function hasVoted(address airline) public view returns (bool)
@@ -122,7 +127,6 @@ contract FlightSuretyApp {
     {
         return dataContract.numVotes(airline);
     }
-
 
     function isRegistered(address airline) public view returns (bool, uint256)
     {
@@ -218,6 +222,8 @@ contract FlightSuretyApp {
         uint8[3] memory indexes = generateIndexes(msg.sender);
 
         oracles[msg.sender] = Oracle({isRegistered: true, indexes: indexes});
+
+        address(dataContract).transfer(msg.value);
     }
 
     function getMyIndexes() external view returns(uint8[3] memory)
