@@ -33,7 +33,7 @@ contract("Airline Registration and Multiparty Consensus Tests", async (accounts)
 
         // ACT
         try {
-            await config.flightSuretyApp.registerAirline.call(newAirline, "Air 2", {from: config.firstAirline});
+            await config.flightSuretyApp.registerAirline(newAirline, "Air 2", {from: config.firstAirline});
         }
         catch(e) {
             reverted = true;
