@@ -128,6 +128,35 @@ contract FlightSuretyApp {
         return dataContract.isAirlineFunded(airline);
     }
 
+    // called by a passenger
+    function buyInsurance(address airline, string memory flight, uint256 timestamp) public payable returns (bool)
+    {
+        // Require insurance amount, 0 to 1 ether.
+        require(msg.value > 0, "Insurance amount not sent");
+
+        // is it more than it should be?
+        uint value = msg.value;
+        uint retvalue = 0;
+        if (value > 1 ether) {
+            value = 1 ether;
+            retvalue = msg.value.sub(1 ether);
+        }
+
+        bool bought = dataContract.buyInsurance(msg.sender, value, airline, flight, timestamp);
+        address(dataContract).transfer(value);
+        if (retvalue > 0) {
+            msg.sender.transfer(retvalue);
+        }
+
+        return bought;
+    }
+
+    // how much did i pay for insurance?
+    function insuredAmount(address airline, string memory flight, uint256 timestamp) public view returns (uint)
+    {
+        return dataContract.insuredAmount(msg.sender, airline, flight, timestamp);
+    }
+
     /**
      * @dev Register a future flight for insuring.
      *
@@ -143,8 +172,16 @@ contract FlightSuretyApp {
      */
     function processFlightStatus(address airline, string memory flight, uint256 timestamp, uint8 statusCode)
         internal
-        pure
     {
+        dataContract.processFlightStatus(airline, flight, timestamp, statusCode);
+        if (statusCode == STATUS_CODE_LATE_AIRLINE) {
+            dataContract.creditInsurees(airline, flight, timestamp);
+        }
+    }
+
+    function payPassenger() public
+    {
+        return dataContract.pay(msg.sender);
     }
 
     // Generate a request for oracles to fetch flight information
@@ -171,7 +208,6 @@ contract FlightSuretyApp {
 
     // Number of oracles that must respond for valid status
     uint256 private constant MIN_RESPONSES = 3;
-
 
     struct Oracle {
         bool isRegistered;
@@ -295,4 +331,13 @@ contract FlightSuretyApp {
 
 // endregion
 
+    /**
+     * @dev Fallback function.
+     * Just forward any funds to the data contract.
+     *
+     */
+    function() external payable
+    {
+        address(dataContract).transfer(msg.value);
+    }
 }

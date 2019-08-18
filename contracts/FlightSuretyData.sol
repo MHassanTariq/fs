@@ -43,9 +43,11 @@ contract FlightSuretyData {
     uint256 private totalFunds;                     // total funds available
 
     // passenger insurance
-    mapping(address => uint256) private insurance;     // map passenger -> amount paid
-    mapping(address => uint256) private payout;        // map passenger -> amount to be paid out
+    mapping(bytes32 => uint256) private insurance;     // map hash(passenger, flightkey) -> amount paid in
+    mapping(address => uint256) private payouts;       // map passenger -> amount to be paid out
     mapping(bytes32 => address[]) private passengers;  // map flight key -> passengers
+
+    uint8 private constant STATUS_CODE_LATE_AIRLINE = 20;
 
 
     /********************************************************************************************/
@@ -58,6 +60,7 @@ contract FlightSuretyData {
     event AirlineFunded(address airline, string name);
 
     event FlightRegistered(address airline, string name, uint256 timestamp, bytes32 key);
+    event InsuranceBought(address passenger, string name, bytes32 key, uint amount);
 
     /**
      * @dev Constructor
@@ -127,7 +130,6 @@ contract FlightSuretyData {
         require(airlines[airline].isFunded, "Caller is not a funded airline");
         _;
     }
-
 
     /********************************************************************************************/
     /*                                       UTILITY FUNCTIONS                                  */
@@ -319,6 +321,9 @@ contract FlightSuretyData {
         Flight memory f = Flight({name: name_, isRegistered: true, statusCode: 0, updatedTimestamp: timestamp, airline: airline_});
         flights[key] = f;
 
+        // no passengers right now
+        passengers[key] = new address[](0);
+
         emit FlightRegistered(airline_, name_, timestamp, key);
 
         return key;
@@ -328,26 +333,85 @@ contract FlightSuretyData {
      * @dev Buy insurance for a flight
      *
      */
-    function buy() external payable
+    function buyInsurance(address passenger, uint amount, address airline, string calldata name, uint256 timestamp)
+        external
+        requireIsOperational()
+        requireAppCaller()
+        requireFundedAirline(airline)
+        returns (bool)
     {
+        bytes32 key = getFlightKey(airline, name, timestamp);
+        require(flights[key].isRegistered && flights[key].statusCode == 0, "Flight cannot be insured for");
 
+        bytes32 ikey = getFlightInsuranceKey(passenger, key);
+        require(insurance[ikey] == 0, "Already bought insurance");
+
+        insurance[ikey] = amount;
+        passengers[key].push(passenger);
+
+        emit InsuranceBought(passenger, name, key, amount);
+
+        return true;
     }
+
+    function insuredAmount(address passenger, address airline, string calldata name, uint256 timestamp)
+        external
+        view
+        requireIsOperational()
+        requireAppCaller()
+        returns (uint)
+    {
+        bytes32 key = getFlightKey(airline, name, timestamp);
+        bytes32 ikey = getFlightInsuranceKey(passenger, key);
+        return insurance[ikey];
+    }
+
+    function processFlightStatus(address airline, string calldata flight, uint256 timestamp, uint8 statusCode)
+        external
+        requireIsOperational()
+        requireAppCaller()
+    {
+        bytes32 key = getFlightKey(airline, flight, timestamp);
+
+        flights[key].statusCode = statusCode;
+    }
+
 
     /**
      *  @dev Credits payouts to insurees
      */
-    function creditInsurees() external pure
+    function creditInsurees(address airline, string calldata flight, uint256 timestamp)
+            external
+            requireIsOperational()
+            requireAppCaller()
     {
+        bytes32 key = getFlightKey(airline, flight, timestamp);
+        require(flights[key].statusCode == STATUS_CODE_LATE_AIRLINE, "Flight not late due to airline");
 
+        address[] memory ps = passengers[key];
+        for (uint idx = 0; idx < ps.length; idx++) {
+            bytes32 ikey = getFlightInsuranceKey(ps[idx], key);
+            if (insurance[ikey] > 0) {
+                uint refund = insurance[ikey].mul(3).div(2);
+                payouts[ps[idx]] = payouts[ps[idx]].add(refund);
+                insurance[ikey] = 0;
+            }
+        }
+        passengers[key] = new address[](0);
     }
 
     /**
      *  @dev Transfers eligible payout funds to insuree
      *
      */
-    function pay() external pure
+    function pay(address payable passenger)
+        external
+        requireIsOperational()
+        requireAppCaller()
     {
-
+        uint payment = payouts[passenger];
+        payouts[passenger] = 0;
+        passenger.transfer(payment);
     }
 
     /**
@@ -379,6 +443,14 @@ contract FlightSuretyData {
         returns(bytes32)
     {
         return keccak256(abi.encodePacked(airline, flight, timestamp));
+    }
+
+    function getFlightInsuranceKey(address passenger, bytes32 flightKey)
+        internal
+        pure
+        returns(bytes32)
+    {
+        return keccak256(abi.encodePacked(passenger, flightKey));
     }
 
     /**
