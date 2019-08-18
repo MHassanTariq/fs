@@ -100,15 +100,13 @@ async function setupAirlines(req, res)
 
 async function setupFlights(req, res)
 {
-    const accounts = await web3.eth.getAccounts();
     let did = [];
 
     // each airline gets two flights
-    for (let i = 0; i <= Flights.length-1; i++) {
-        let address = accounts[1+Math.floor(i/2)];
-        let flight = Flights[i];
-        console.log(`airline ${address} flight: ${flight.name}`);
-        did.push(`airline ${address} flight: ${flight.name}`);
+    for (let flight of Flights) {
+        await fsapp.methods.registerFlight(flight.name, flight.timestamp).send({from: flight.address, gas: config.gas});
+        console.log(`airline ${flight.address} flight: ${flight.name}`);
+        did.push(`airline ${flight.address} flight: ${flight.name}`);
     }
     return res.json({status: "okay", "events": did}).end();
 }
