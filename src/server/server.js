@@ -5,7 +5,7 @@ import random from "random";
 import FlightSuretyApp from "../../build/contracts/FlightSuretyApp.json";
 import Config from "./config.json";
 import Web3 from "web3";
-import Flights from "../../flights.json";
+import Flights from "../../flights.js";
 
 import express from "express";
 import cors from "cors";

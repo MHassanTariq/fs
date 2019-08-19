@@ -37,7 +37,8 @@ contract FlightSuretyData {
     mapping(address => uint256) private votes;      // airlines in the queue and their votes
     mapping(address => address[]) private voters;   // list of voters for an airline
     uint256 public numAirlines;                     // number of airlines, registered or unregistered
-    uint256 public numFundedAirlines;               // number of funded airlines
+    uint256 private numRegisteredAirlines;           // number of registered airlines
+    uint256 private numFundedAirlines;               // number of funded airlines
 
     // funds, should match web3.eth.getBalance(data contract's account);
     uint256 private totalFunds;                     // total funds available
@@ -74,6 +75,7 @@ contract FlightSuretyData {
         first.isRegistered = true;
         airlines[address_] = first;
         numAirlines = numAirlines.add(1);
+        numRegisteredAirlines = numRegisteredAirlines.add(1);
         emit AirlineRegistered(address_, name_);
     }
 
@@ -205,15 +207,16 @@ contract FlightSuretyData {
         // cannot re-register a registered airline
         require(!airlines[address_].isRegistered, "Airline is already registered");
 
-        // with fewer than four funded airlines, an existing funded airline can add
+        // with fewer than four registered airlines, an existing funded airline can add
         // the new airline
-        if (numFundedAirlines < 4) {
+        if (numRegisteredAirlines < 4) {
             require(airlines[registeringAirline].isFunded, "Caller is not a funded airline");
 
             Airline memory a = newAirline(address_, name_);
             a.isRegistered = true;
             airlines[address_] = a;
             numAirlines = numAirlines.add(1);
+            numRegisteredAirlines = numRegisteredAirlines.add(1);
             emit AirlineRegistered(address_, name_);
             return (true, 0);
         }
@@ -268,6 +271,7 @@ contract FlightSuretyData {
 
         if (votes[address_] > numFundedAirlines.div(2)) {
             airlines[address_].isRegistered = true;
+            numRegisteredAirlines = numRegisteredAirlines.add(1);
             delete votes[address_];
             delete voters[address_];
             emit AirlineRegistered(address_, airlines[address_].name);
@@ -427,6 +431,8 @@ contract FlightSuretyData {
         requireRegisteredAirline(address_)
         returns (bool)
     {
+        require(amount > 0, "Did not send any funds.");
+
         airlines[address_].amountFunded = airlines[address_].amountFunded.add(amount);
         totalFunds = totalFunds.add(amount);
         emit AirlineSentFunds(address_, amount, airlines[address_].amountFunded);
