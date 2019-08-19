@@ -157,6 +157,13 @@ contract FlightSuretyApp {
         return dataContract.insuredAmount(msg.sender, airline, flight, timestamp);
     }
 
+    // send me what i'm owed
+    function payPassenger() public
+    {
+        return dataContract.pay(msg.sender);
+    }
+
+
     /**
      * @dev Register a future flight for insuring.
      *
@@ -177,11 +184,6 @@ contract FlightSuretyApp {
         if (statusCode == STATUS_CODE_LATE_AIRLINE) {
             dataContract.creditInsurees(airline, flight, timestamp);
         }
-    }
-
-    function payPassenger() public
-    {
-        return dataContract.pay(msg.sender);
     }
 
     // Generate a request for oracles to fetch flight information

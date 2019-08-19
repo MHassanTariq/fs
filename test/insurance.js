@@ -11,8 +11,10 @@ contract("Flight Insurance Tests", async (accounts) => {
 
     const halfEther = web3.utils.toWei("0.5", "ether");
     const oneEther = web3.utils.toWei("1", "ether");
+    const oneHalfEther = web3.utils.toWei("1.5", "ether");
     const twoEther = web3.utils.toWei("2", "ether");
     const tenEther = web3.utils.toWei("10", "ether");
+    const diffAmount = web3.utils.toWei("100", "milli");
     const testFlight = "Flight 101";
     const testTimestamp = 1566359629;
 
@@ -127,14 +129,15 @@ contract("Flight Insurance Tests", async (accounts) => {
     it("register twenty oracles", async () => {
         let base = 29;
         let oracles = 20;
+        let fee = await config.flightSuretyApp.REGISTRATION_FEE.call();
 
         let registered = true;
 
         try {
             for (let i = 0; i < oracles; i++) {
-                await config.flightSuretyApp.registerOracle({from: accounts[base+i], value: oneEther});
+                await config.flightSuretyApp.registerOracle({from: accounts[base+i], value: fee});
                 let indexes = await config.flightSuretyApp.getMyIndexes.call({from: accounts[base+i]});
-                // console.log(`oracle ${i} indexes ${indexes}`);
+                console.log(`oracle ${i} indexes ${indexes}`);
             }
         }
         catch (e) {
@@ -142,5 +145,52 @@ contract("Flight Insurance Tests", async (accounts) => {
         }
 
         assert.equal(registered, true, "Unable to register all oracles");
+    });
+
+    // this part is from test/oracle.js
+    it("request flight status and reply with 20", async () => {
+        let flight = Flights[1];
+        let base = 29;
+        let oracles = 20;
+
+        await config.flightSuretyApp.fetchFlightStatus(flight.address, flight.name, flight.timestamp);
+
+        // ideally we should listen for the OracleRequest event, find the index, and use the
+        // appropriate oracle to respond.
+        for (let i = 0; i < oracles; i++) {
+            let oracleIndexes = await config.flightSuretyApp.getMyIndexes.call({from: accounts[base+i]});
+            for (let idx = 0; idx < 3; idx++) {
+                try {
+                    await config.flightSuretyApp.submitOracleResponse(oracleIndexes[idx], flight.address,
+                                                                      flight.name, flight.timestamp,
+                                                                      20, {from: accounts[base+i]});
+                }
+                catch(e) {
+                    // console.log(`Error ${idx} ${oracleIndexes[idx].toNumber()}, ${flight.name}, ${flight.timestamp}`);
+                }
+            }
+        }
+    });
+
+    it("passenger gets a refund of 1.5x what they put in", async () => {
+        let flight = Flights[1];
+        let passenger = accounts[10];
+
+        let before = await web3.eth.getBalance(passenger);
+        let tx = await config.flightSuretyApp.payPassenger({from: passenger});
+        let after = await web3.eth.getBalance(passenger);
+
+        // console.log(after-before, oneHalfEther);
+        // console.log(tx);
+    });
+
+    it("confirm that the other flight is still insured for", async () => {
+        let passenger = accounts[10];
+        let flight = Flights[0];
+
+        let amount = await config.flightSuretyApp.insuredAmount.call(flight.address, flight.name, flight.timestamp,
+                                                                     {from: passenger});
+
+        assert.equal(amount, halfEther, "Should be 0.5 ether");
     });
 });
