@@ -58,16 +58,16 @@ To view dapp:
 
 ## Tests
 
-Aside from the project-provided test cases in flightSurety.js and
-oracle.js, these additional test cases are implemented:
+Aside from the project-provided test cases in `flightSurety.js` and
+`oracle.js`, these additional tests are implemented:
 
 ### flightSurety.js
 
 * first airline is registered but not funded
 * airline is not funded if it sends less than 10 ether
-* airline cannot register an Airline using registerAirline() if it is not funded
+* airline cannot register an Airline using `registerAirline()` if it is not funded
 * airline is funded if it sends 10 or more more ether
-* airline can register another Airline using registerAirline() if it is funded
+* airline can register another Airline using `registerAirline()` if it is funded
 
 ### flights.js
 
@@ -76,15 +76,15 @@ oracle.js, these additional test cases are implemented:
 ### insurance.js
 
 * (first airline) is funded
-* (airline) can registers three airlines using registerAirline()
+* (airline) can registers three airlines using `registerAirline()`
 * register flights
 * buy insurance for a flight: send no money
 * buy insurance for a flight 1: send 0.5 ether
-* buy insurance for a flight 2: send 2 ether but only 1 ether is insured **see note**
+* buy insurance for a flight 2: send 2 ether but only 1 ether is insured **see noteb below**
 * cannot buy insurance for the same flight twice
 * register twenty oracles
 * request flight status for flight 2 and oracles reply with 20
-* passenger gets a refund of 1.5x what they put in **see note**
+* passenger gets a refund of 1.5x what they put in **see note below**
 * confirm that flight 1 is still insured for
 
 **NOTE** While I have checked manually using `web3.eth.getBalance`
@@ -95,9 +95,9 @@ for the gas spent in calling the contract functions.
 ### multi.js
 
 * (first airline) is registered but not funded
-* (first airline) cannot register an Airline using registerAirline() if it is not funded
+* (first airline) cannot register an Airline using `registerAirline()` if it is not funded
 * airline is funded if it sends 10 or more ether
-* (airline) can register another Airline using registerAirline() if it is funded
+* (airline) can register another Airline using `registerAirline()` if it is funded
 * (second airline) is registered but not funded at registration
 * (second airline) can register third and fourth if funded
 * fund third and fourth airlines to switch to multiparty
@@ -116,15 +116,3 @@ To build dapp for prod:
     npm run dapp:prod
 
 Deploy the contents of the ./dapp folder
-
-
-## Resources
-
-* [How does Ethereum work anyway?](https://medium.com/@preethikasireddy/how-does-ethereum-work-anyway-22d1df506369)
-* [BIP39 Mnemonic Generator](https://iancoleman.io/bip39/)
-* [Truffle Framework](http://truffleframework.com/)
-* [Ganache Local Blockchain](http://truffleframework.com/ganache/)
-* [Remix Solidity IDE](https://remix.ethereum.org/)
-* [Solidity Language Reference](http://solidity.readthedocs.io/en/v0.4.24/)
-* [Ethereum Blockchain Explorer](https://etherscan.io/)
-* [Web3Js Reference](https://github.com/ethereum/wiki/wiki/JavaScript-API)
