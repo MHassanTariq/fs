@@ -431,6 +431,8 @@ contract FlightSuretyData {
         requireRegisteredAirline(address_)
         returns (bool)
     {
+        require(amount > 0, "Did not send any funds.");
+
         airlines[address_].amountFunded = airlines[address_].amountFunded.add(amount);
         totalFunds = totalFunds.add(amount);
         emit AirlineSentFunds(address_, amount, airlines[address_].amountFunded);
