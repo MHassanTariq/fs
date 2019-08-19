@@ -5,14 +5,14 @@ import random from "random";
 import FlightSuretyApp from "../../build/contracts/FlightSuretyApp.json";
 import Config from "./config.json";
 import Web3 from "web3";
-import express from "express";
 import Flights from "../../flights.json";
+
+import express from "express";
+import cors from "cors";
 
 const config = Config["localhost"];
 
-// this line is probably wrong
 const web3 = new Web3(new Web3.providers.WebsocketProvider(config.url.replace("http", "ws")));
-
 const fsapp = new web3.eth.Contract(FlightSuretyApp.abi, config.appAddress);
 
 const numOracles = 20;
@@ -148,14 +148,16 @@ async function setupOracles(req, res)
 _listenmisc();
 
 const app = express();
+app.use(cors());
+
 
 app.get("/api", (req, res) => {
     res.send({message: "An API for use with your Dapp!"});
 });
 
-app.post("/airlines", setupAirlines);
-app.post("/flights", setupFlights);
-app.post("/oracles", setupOracles);
+app.post("/api/airlines", setupAirlines);
+app.post("/api/flights", setupFlights);
+app.post("/api/oracles", setupOracles);
 
 export default app;
 

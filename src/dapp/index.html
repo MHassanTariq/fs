@@ -18,12 +18,41 @@
     </nav>
 
     <main class="container">
+      <div id="startup" class="top-20">
+        <ol>
+          <li><button id="check-operational-status">Check Operational Status</button></li>
+          <li><button id="setup-airlines">Setup Airlines</button></li>
+          <li><button id="setup-oracles">Setup Oracles</button></li>
+          <li><button id="setup-flights">Setup Flights</button></li>
+        </ol>
+      </div>
+      <div id="status" class="top-20">
+
+      </div>
       <div id="display-wrapper" class="top-20">
       </div>
       <div class="row top-20">
         <label class="form">Flight</label>
         <input type="text" id="flight-number">
         <button class="btn btn-primary" id="submit-oracle">Submit to Oracles</button>
+      </div>
+      <div id="buy-insurance-section" class="top-20">
+        <h2>Buy insurance for flight</h2>
+        <table>
+          <tr>
+            <td><label class="form">Flight</label></td>
+            <td>
+              <select id="insurance-flights" name="insurance-flights">
+                <option val="-1">Select flight</option>
+                <option val="d">dummy</option>
+            </select></td>
+          </tr>
+          <tr>
+            <td><label class="form">Amount in ETH</label></td>
+            <td><input id="amount" name="amount" type="number" required="required" step="0.00001" min="0.00001" max="10" value="1.00000" /></td>
+            <td><button class="btn btn-primary" id="buy-insurance">Buy Insurance</button></td>
+          </tr>
+        </table>
       </div>
     </main>
   </body>

@@ -27,7 +27,7 @@ contract("Flight Insurance Tests", async (accounts) => {
 
     });
 
-    it("(airline) can registers three airlines using registerAirline()", async () => {
+    it("(airline) can register three airlines using registerAirline()", async () => {
         let second = accounts[2];
         let third = accounts[3];
         let fourth = accounts[4];

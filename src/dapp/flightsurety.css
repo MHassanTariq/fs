@@ -40,3 +40,7 @@ label.form {
 input {
     margin-right: 30px;
 }
+
+.hidden {
+    display: none;
+}
