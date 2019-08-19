@@ -136,8 +136,8 @@ contract("Flight Insurance Tests", async (accounts) => {
         try {
             for (let i = 0; i < oracles; i++) {
                 await config.flightSuretyApp.registerOracle({from: accounts[base+i], value: fee});
-                let indexes = await config.flightSuretyApp.getMyIndexes.call({from: accounts[base+i]});
-                console.log(`oracle ${i} indexes ${indexes}`);
+                // let indexes = await config.flightSuretyApp.getMyIndexes.call({from: accounts[base+i]});
+                // console.log(`oracle ${i} indexes ${indexes}`);
             }
         }
         catch (e) {
@@ -172,9 +172,15 @@ contract("Flight Insurance Tests", async (accounts) => {
         }
     });
 
-    it("passenger gets a refund of 1.5x what they put in", async () => {
+    it("passenger gets a refund of 1.5x what they put in and has no amount insured for the flight", async () => {
         let flight = Flights[1];
         let passenger = accounts[10];
+
+        // nothing is insured now, money moved to payout.
+        let amount = await config.flightSuretyApp.insuredAmount.call(flight.address, flight.name, flight.timestamp,
+                                                                     {from: passenger});
+        assert.equal(amount.toNumber(), 0, `Nothing should be left to pay out for flight ${flight.name}`);
+
 
         let before = await web3.eth.getBalance(passenger);
         let tx = await config.flightSuretyApp.payPassenger({from: passenger});
@@ -182,6 +188,7 @@ contract("Flight Insurance Tests", async (accounts) => {
 
         // console.log(after-before, oneHalfEther);
         // console.log(tx);
+
     });
 
     it("confirm that the other flight is still insured for", async () => {
