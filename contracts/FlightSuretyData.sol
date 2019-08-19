@@ -393,6 +393,7 @@ contract FlightSuretyData {
             bytes32 ikey = getFlightInsuranceKey(ps[idx], key);
             if (insurance[ikey] > 0) {
                 uint refund = insurance[ikey].mul(3).div(2);
+                totalFunds = totalFunds.sub(refund); // this can run out
                 payouts[ps[idx]] = payouts[ps[idx]].add(refund);
                 insurance[ikey] = 0;
                 emit PayableInsurance(ps[idx], flight, payouts[ps[idx]]);
