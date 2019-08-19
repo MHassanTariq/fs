@@ -153,9 +153,9 @@ app.get("/api", (req, res) => {
     res.send({message: "An API for use with your Dapp!"});
 });
 
-app.post("/airlines", setupAirlines);
-app.post("/flights", setupFlights);
-app.post("/oracles", setupOracles);
+app.post("/api/airlines", setupAirlines);
+app.post("/api/flights", setupFlights);
+app.post("/api/oracles", setupOracles);
 
 export default app;
 
