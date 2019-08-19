@@ -416,8 +416,10 @@ contract FlightSuretyData {
         requireAppCaller()
     {
         uint payment = payouts[passenger];
-        payouts[passenger] = 0;
-        passenger.transfer(payment);
+        if (payment > 0) {
+            payouts[passenger] = 0;
+            passenger.transfer(payment);
+        }
     }
 
     /**
