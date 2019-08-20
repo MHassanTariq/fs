@@ -80,7 +80,7 @@ Aside from the project-provided test cases in `flightSurety.js` and
 * register flights
 * buy insurance for a flight: send no money
 * buy insurance for a flight 1: send 0.5 ether
-* buy insurance for a flight 2: send 2 ether but only 1 ether is insured **see noteb below**
+* buy insurance for a flight 2: send 2 ether but only 1 ether is insured **see note below**
 * cannot buy insurance for the same flight twice
 * register twenty oracles
 * request flight status for flight 2 and oracles reply with 20
