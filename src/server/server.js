@@ -3,6 +3,7 @@
 import random from "random";
 
 import FlightSuretyApp from "../../build/contracts/FlightSuretyApp.json";
+import FlightSuretyData from "../../build/contracts/FlightSuretyData.json";
 import Config from "./config.json";
 import Web3 from "web3";
 import Flights from "../../flights.js";
@@ -14,6 +15,8 @@ const config = Config["localhost"];
 
 const web3 = new Web3(new Web3.providers.WebsocketProvider(config.url.replace("http", "ws")));
 const fsapp = new web3.eth.Contract(FlightSuretyApp.abi, config.appAddress);
+// need fsdata to listen to events
+const fsdata = new web3.eth.Contract(FlightSuretyData.abi, config.dataAddress);
 
 const numOracles = 20;
 const oracleAddressStart = 29;                                   // addresses 29 to 49 are oracles
@@ -40,7 +43,7 @@ function _randomCode()
 }
 
 // internal: listen for OracleReport and FlightStatusInfo events
-function _listenmisc()
+function listenmisc()
 {
     fsapp.events.OracleReport({fromBlock: 0}, (err, event) => {
         if (err) { console.log(err); }
@@ -54,6 +57,13 @@ function _listenmisc()
         let result = event.returnValues;
 
         console.log(`FlightStatusInfo ${result.airline} ${result.flight} ${result.timestamp} ${result.status}`);
+    });
+
+    fsdata.events.InsuranceBought({fromBlock: 0}, (err, event) => {
+        if (err) { console.log(err); }
+        let result = event.returnValues;
+
+        console.log(`InsuranceBought ${result.passenger} ${result.name} ${result.key} ${result.amount}`);
     });
 }
 
@@ -148,8 +158,13 @@ async function setupOracles(req, res)
     if (res !== undefined) return res.json({status: "okay", "events": did}).end();
 }
 
-// start non-oracle listeners
-_listenmisc();
+// start everything
+async function startup() {
+    await setupAirlines();
+    await setupFlights();
+    await setupOracles();
+    await listenmisc();
+}
 
 const app = express();
 app.use(cors());
@@ -162,6 +177,8 @@ app.get("/api", (req, res) => {
 app.post("/api/airlines", setupAirlines);
 app.post("/api/flights", setupFlights);
 app.post("/api/oracles", setupOracles);
+
+startup().then(console.log);
 
 export default app;
 
