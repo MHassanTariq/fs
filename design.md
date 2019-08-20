@@ -76,11 +76,17 @@ responsible for checking how much ether the passenger has sent along
 with the `buyInsurance` call, and for refunding any amount greater
 than 1 ether.
 
+The contract will not let passengers buy insurance for a flight that
+is not in state 0 (unknown).
+
 ## Oracle Responses
 
 If three or more oracles reply to an `OracleRequest` event with the
 same flight status code, the flight's `statusCode` is updated in the
 data contract.
+
+The contract does not prevent passengers from repeatedly querying the
+oracles.
 
 ## Paying out
 
