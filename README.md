@@ -118,8 +118,13 @@ for the gas spent in calling the contract functions.
 
 ## Deploy
 
-To build dapp for prod:
+To build and run the dapp in production:
 
+    ganache-cli -m 'candy maple cake sugar pudding cream honey rich smooth crumble sweet treat' \
+        -a 50 -e 100 --noVMErrorsOnRPCResponse
+    rm -fr build
+    truffle migrate --reset
     npm run dapp:prod
+    npm run server
 
-Deploy the contents of the ./dapp folder
+The dapp and the server code are both available at http://localhost:3000/

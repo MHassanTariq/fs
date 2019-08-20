@@ -177,6 +177,8 @@ const app = express();
 app.use(cors());
 
 
+app.use(express.static("prod/dapp"));
+
 app.get("/api", (req, res) => {
     res.send({message: "An API for use with your Dapp!"});
 });
