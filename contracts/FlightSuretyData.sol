@@ -346,7 +346,7 @@ contract FlightSuretyData {
         returns (bool)
     {
         bytes32 key = getFlightKey(airline, name, timestamp);
-        require(flights[key].isRegistered && flights[key].statusCode == 0, "Flight cannot be insured for");
+        require(flights[key].isRegistered && flights[key].statusCode == 0, "Flight cannot be insured for (already landed)");
 
         bytes32 ikey = getFlightInsuranceKey(passenger, key);
         require(insurance[ikey] == 0, "Already bought insurance");
