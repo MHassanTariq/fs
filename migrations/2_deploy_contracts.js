@@ -17,12 +17,15 @@ module.exports = async (deployer) => {
 
     await data.authorizeCaller(app.address);
 
+    // get the gas limit
+    let block = await web3.eth.getBlock("latest");
+
     let config = {
         localhost: {
             url: 'http://localhost:8545',
             dataAddress: data.address,
             appAddress: app.address,
-            gas: deployer.networks[deployer.network].gas
+            gas: block.gasLimit
         }
     };
 
