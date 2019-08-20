@@ -24,16 +24,38 @@ export default class Contract {
             ethereum.enable().then((account) => {
                 let defaultAccount = account[0];
                 this.web3.eth.defaultAccount = defaultAccount;
-                this.owner = account[0];
+                this.owner = defaultAccount;
                 this.flightSuretyApp = TruffleContract(FlightSuretyApp, config.appAddress);
                 this.flightSuretyApp.setProvider(this.web3.currentProvider);
                 this.flightSuretyApp.defaults({from: this.web3.eth.defaultAccount});
                 console.log("enabled");
                 console.log(`e owner: ${this.owner}`);
-                // FIXME: this.web3.currentProvider.publicConfigStore.on("update", this.initialize);
+                // FIXME:
+                // this.web3.currentProvider.publicConfigStore.on("update", this.resetAccounts);
                 callback();
             });
         }
+    }
+
+    resetAccounts() {
+        window.ethereum.enable().then((account) => {
+            let defaultAccount = account[0];
+            this.web3.eth.defaultAccount = defaultAccount;
+            this.owner = defaultAccount;
+            console.log(`reset to: ${this.owner}`);
+        });
+    }
+
+    async registerEvents(callback) {
+        let self = this;
+        self.flightSuretyApp.deployed().then((app) => {
+            console.log(app);
+            app.allEvents({}, (error, event) => {
+                console.log(error);
+                console.log(event);
+                callback({topic: "topic", title: "title", error: error, value: "blah"});
+            });
+        });
     }
 
     async isOperational(callback) {
@@ -69,14 +91,23 @@ export default class Contract {
             return;
         }
 
-        let accts = window.ethereum.enable();
+        let accts = await window.ethereum.enable();
         console.log(accts[0]);
 
-        await self.flightSuretyApp.methods
-            .fetchFlightStatus(payload.airline, payload.flight, payload.timestamp)
-            .send({ from: accts[0]}, (error, result) => {
-                callback(error, payload);
-            });
+        self.flightSuretyApp.deployed().then((app) => {
+            return app.fetchFlightStatus(payload.airline, payload.flight, payload.timestamp, {from: accts[0]})
+                .then(() => {
+                    return app.getFlightStatus(payload.airline, payload.flight, payload.timestamp, {from: accts[0]});
+                })
+                .then((result) => { console.log("r"); console.log(result.toNumber()); callback(null, result.toNumber()); })
+                .catch((error) => { console.log(error); callback(error, null); });
+        });
+
+        // await self.flightSuretyApp.methods
+        //     .fetchFlightStatus(payload.airline, payload.flight, payload.timestamp)
+        //     .send({ from: accts[0]}, (error, result) => {
+        //         callback(error, payload);
+        //     });
     }
 
     fetchFlights() {

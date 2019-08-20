@@ -15,8 +15,13 @@ const axios = Axios.create({
     let done = new Set();
 
     let contract = new Contract("localhost", async () => {
+        await contract.registerEvents((message) => {
+            display(message.topic, message.title, [{label: message.title, error: message.error, value: message.data}]);
+        });
+
         let flights = contract.fetchFlights();
         displayInsuranceForm(flights);
+
 
         DOM.elid("check-operational-status").addEventListener("click", async () => {
             // Read transaction
