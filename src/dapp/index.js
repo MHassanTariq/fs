@@ -3,6 +3,8 @@ import Contract from "./contract";
 import "./flightsurety.css";
 import Axios from "axios";
 import $ from "jquery";
+import "node-snackbar/dist/snackbar.css";
+import Snackbar from "node-snackbar";
 
 const axios = Axios.create({
     baseURL: "http://localhost:3000/api/",
@@ -121,32 +123,17 @@ const axios = Axios.create({
 
 })();
 
-function serverResponse(msg) {
-    console.log(msg.data);
-}
-
-
-function display(title, description, results) {
-    let displayDiv = DOM.elid("display-wrapper");
-    let section = DOM.section();
-    section.appendChild(DOM.h2(title));
-    section.appendChild(DOM.h5(description));
-    console.log(results);
-    results.forEach((result) => {
-        let row = section.appendChild(DOM.div({className:"row"}));
-        row.appendChild(DOM.div({className: "col-sm-4 field"}, result.label));
+function display(title, description, results)
+{
+    for (let result of results) {
+        console.log(result);
         if (result.error) {
-            row.appendChild(DOM.div({className: "col-sm-8 field-value"}, String(result.error)));
+            console.log("error");
+            Snackbar.show({text: `${result.label}: ` + result.error, pos: "bottom-center", textColor: "#ff3366"});
         } else {
-            if (typeof(result.value) === "object") {
-                for (let v of result.value) {
-                    row.appendChild(DOM.div({className: "col-sm-12 field-value"}, String(v)));
-                }
-            } else {
-                row.appendChild(DOM.div({className: "col-sm-12 field-value"}, String(result.value)));
-            }
+            Snackbar.show({text: `${result.label}: ` + result.value, pos: "bottom-center", duration: 2000});
         }
-        section.appendChild(row);
-    })
-    displayDiv.append(section);
+    }
 }
+
+// eof
