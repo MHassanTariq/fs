@@ -180,6 +180,9 @@ contract FlightSuretyApp {
     function processFlightStatus(address airline, string memory flight, uint256 timestamp, uint8 statusCode)
         internal
     {
+      // no longer accepting responses
+      // DISABLED: oracleResponses[key].isOpen = false;
+
         dataContract.processFlightStatus(airline, flight, timestamp, statusCode);
         if (statusCode == STATUS_CODE_LATE_AIRLINE) {
             dataContract.creditInsurees(airline, flight, timestamp);

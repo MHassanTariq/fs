@@ -86,7 +86,8 @@ same flight status code, the flight's `statusCode` is updated in the
 data contract.
 
 The contract does not prevent passengers from repeatedly querying the
-oracles.
+oracles.  To change this behavior, uncomment the "DISABLED" line in the
+FlightSuretyApp contract.
 
 ## Paying out
 
