@@ -10,8 +10,6 @@ const axios = Axios.create({
 });
 
 (async() => {
-    let result = null;
-
     // $("#buy-insurance-section").hide();
 
     let done = new Set();
@@ -45,7 +43,7 @@ const axios = Axios.create({
         DOM.elid("setup-oracles").addEventListener("click", async () => {
             try {
                 let response = await axios.post("/oracles", {});
-                display("Oracles", "Oracle Status", [{label: "Oracle Status", error: null, value: response.data.events}])
+                display("Oracles", "Oracle Status", [{label: "Oracle Status", error: null, value: response.data.events}]);
                 done.add("oracles");
                 if (done.size == 3) displayInsuranceForm(flights);
             }
@@ -58,7 +56,7 @@ const axios = Axios.create({
         DOM.elid("setup-flights").addEventListener("click", async () => {
             try {
                 let response = await axios.post("/flights", {});
-                display("Flights", "Flight Status", [{label: "Flight Status", error: null, value: response.data.events}])
+                display("Flights", "Flight Status", [{label: "Flight Status", error: null, value: response.data.events}]);
                 done.add("flights");
                 if (done.size == 3) displayInsuranceForm(flights);
 
@@ -75,7 +73,7 @@ const axios = Axios.create({
             await contract.fetchFlightStatus(flight, (error, result) => {
                 display("Oracles", "Trigger oracles", [ { label: "Fetch Flight Status", error: error, value: result.flight + " " + result.timestamp} ]);
             });
-        })
+        });
 
         DOM.elid("buy-insurance").addEventListener("click", () => {
             let flight = DOM.elid("insurance-flights").value;

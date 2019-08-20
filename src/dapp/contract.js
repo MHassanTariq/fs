@@ -2,45 +2,47 @@ import FlightSuretyApp from "../../build/contracts/FlightSuretyApp.json";
 import Config from "./config.json";
 import Web3 from "web3";
 import Flights from "../../flight";
+import TruffleContract  from "truffle-contract";
+
 
 export default class Contract {
     constructor(network, callback) {
-        let config = Config[network];
 
-        if (typeof window.ethereum !== "undefined") {
-            console.warn("Using web3 detected from external source like Metamask");
-            this.web3 = new Web3(web3.currentProvider);
-        } else {
-            this.web3 = new Web3(new Web3.providers.HttpProvider(config.url));
-        }
-        // this.web3 = new Web3(new Web3.providers.HttpProvider(config.url));
-        this.flightSuretyApp = new this.web3.eth.Contract(FlightSuretyApp.abi, config.appAddress);
-        this.initialize(callback);
+        let config = Config[network];
+        // default
+        this.web3 = new Web3(new Web3.providers.HttpProvider(config.url));
         this.owner = null;
         this.airlines = [];
         this.passengers = [];
-        this.flights = [];
+        this.flights = [...Flights];
         this.oracles = [];
-    }
 
-    initialize(callback) {
-        this.web3.eth.getAccounts(async (error, accts) => {
-
-            this.owner = accts[0];
-
-            this.airlines = accts.slice(1,5);
-            this.flights = [...Flights];
-            this.oracles = accts.slice(29,49);
-
-            callback();
-        });
+        if (window.ethereum) {
+            console.log("found window.ethereum");
+            const ethereum = window.ethereum;
+            this.web3 = new Web3(ethereum);
+            ethereum.enable().then((account) => {
+                let defaultAccount = account[0];
+                this.web3.eth.defaultAccount = defaultAccount;
+                this.owner = account[0];
+                this.flightSuretyApp = TruffleContract(FlightSuretyApp, config.appAddress);
+                this.flightSuretyApp.setProvider(this.web3.currentProvider);
+                this.flightSuretyApp.defaults({from: this.web3.eth.defaultAccount});
+                console.log("enabled");
+                console.log(`e owner: ${this.owner}`);
+                // FIXME: this.web3.currentProvider.publicConfigStore.on("update", this.initialize);
+                callback();
+            });
+        }
     }
 
     async isOperational(callback) {
         let self = this;
-        await self.flightSuretyApp.methods
-            .isOperational()
-            .call({ from: self.owner}, callback);
+        self.flightSuretyApp.deployed().then((app) => {
+            return app.isOperational({from: self.owner}).then(callback);
+        // await self.flightSuretyApp.isOperational()
+            //     .call({ from: self.owner}, callback);
+        });
     }
 
     async fetchFlightStatus(flight, callback) {
@@ -50,7 +52,7 @@ export default class Contract {
             airline: null,
             flight: flight,
             timestamp: 0
-        }
+        };
 
         let found = false;
         for (let f of this.flights) {
