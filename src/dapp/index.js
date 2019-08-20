@@ -10,73 +10,36 @@ const axios = Axios.create({
 });
 
 (async() => {
-    // $("#buy-insurance-section").hide();
-
-    let done = new Set();
-
     let contract = new Contract("localhost", async () => {
         await contract.registerEvents((message) => {
              display(message.topic, message.title, [{label: message.title, error: message.error, value: message.data}]);
         });
 
         let flights = contract.fetchFlights();
+        displayOracleForm(flights);
         displayInsuranceForm(flights);
+        displayAmIInsured(flights);
 
 
         DOM.elid("check-operational-status").addEventListener("click", async () => {
             // Read transaction
             await contract.isOperational((error, result) => {
                 console.log(error, result);
-                display("Operational Status", "Check if contract is operational", [ { label: "Operational Status", error: error, value: result} ]);
+                display("Operational Status", "Check if contract is operational", [{label: "Operational Status", error: error, value: result}]);
             });
         });
-
-        // // setup
-        // DOM.elid("setup-airlines").addEventListener("click", async () => {
-        //     try {
-        //         let response = await axios.post("/airlines", {});
-
-        //         display("Airlines", "Airline Status", [{label: "Airline Status", error: null, value: response.data.events}]);
-        //         done.add("airlines");
-        //         if (done.size == 3) displayInsuranceForm(flights);
-        //     }
-        //     catch (e) {
-        //         display("Airlines", "Airline Status", [{label: "Airline Status", error: e, value: null}]);
-        //     }
-        // });
-
-        // DOM.elid("setup-oracles").addEventListener("click", async () => {
-        //     try {
-        //         let response = await axios.post("/oracles", {});
-        //         display("Oracles", "Oracle Status", [{label: "Oracle Status", error: null, value: response.data.events}]);
-        //         done.add("oracles");
-        //         if (done.size == 3) displayInsuranceForm(flights);
-        //     }
-        //     catch (e) {
-        //         display("Oracles", "Oracle Status", [{label: "Oracle Status", error: e, value: null}]);
-        //     }
-        // });
-
-
-        // DOM.elid("setup-flights").addEventListener("click", async () => {
-        //     try {
-        //         let response = await axios.post("/flights", {});
-        //         display("Flights", "Flight Status", [{label: "Flight Status", error: null, value: response.data.events}]);
-        //         done.add("flights");
-        //         if (done.size == 3) displayInsuranceForm(flights);
-
-        //     }
-        //     catch (e) {
-        //         display("Flights", "Flight Status", [{label: "Flight Status", error: e, value: null}]);
-        //     }
-        // });
 
         // User-submitted transaction
         DOM.elid("submit-oracle").addEventListener("click", async () => {
             let flight = DOM.elid("flight-number").value;
+
+            // do nothing
+            if (flight === "-1") return;
+            console.log(flight);
+
             // Write transaction
             await contract.fetchFlightStatus(flight, (error, result) => {
-                display("Oracles", "Trigger oracles", [ { label: "Fetch Flight Status", error: error, value: result} ]);
+                display("Oracles", "Trigger oracles", [{label: "Fetch Flight Status", error: error, value: result}]);
             });
         });
 
@@ -97,27 +60,62 @@ const axios = Axios.create({
                 }
             }
             if (!found) {
-                display("Insurance", "Buy Insurance", [ { label: "Insurance", error: "Invalid flight", value: null} ]);
+                display("Insurance", "Buy Insurance", [{label: "Insurance", error: "Invalid flight", value: null}]);
             }
             if (isNaN(insurance)) {
-                display("Insurance", "Buy Insurance", [ { label: "Insurance", error: "Invalid amount", value: null} ]);
+                display("Insurance", "Buy Insurance", [{label: "Insurance", error: "Invalid amount", value: null}]);
                 return;
             }
 
             await contract.buyInsurance(flight, insurance, (error, result) => {
-                display("Insurance", "Buy Insurance", [ { label: "Insurance", error: error, value: result} ]);
+                display("Insurance", "Buy Insurance", [{label: "Insurance", error: error, value: result}]);
             });
         });
 
+        DOM.elid("submit-ami").addEventListener("click", async () => {
+            let flight = DOM.elid("flight-number-insured").value;
+
+            // do nothing
+            if (flight === "-1") return;
+            console.log(flight);
+
+            // Write transaction
+            await contract.insuredAmount(flight, (error, result) => {
+                display("Insurance", "Amount Insured", [{label: "Amount Insured", error: error, value: result}]);
+            });
+        });
+
+        DOM.elid("request-payment").addEventListener("click", async () => {
+            // Write transaction
+            await contract.payPassenger((error, result) => {
+                display("Insurance", "Amount Transferred", [{label: "Amount Transferred", error: error, value: result}]);
+            });
+        });
     });
+
+    function displayOracleForm(flights)
+    {
+        $("#flight-number").find("option").remove().end().append($("<option />").val("-1").text("Select Flight..."));
+        for (let flight of flights) {
+            $("#flight-number").append($("<option />").val(flight.name).text(`${flight.name}: ${flight.from} to ${flight.to}`));
+        }
+    }
+
 
     function displayInsuranceForm(flights)
     {
         $("#insurance-flights").find("option").remove().end().append($("<option />").val("-1").text("Select Flight..."));
         for (let flight of flights) {
-            $("#insurance-flights").append($("<option />").val(flight.name).text(`${flight.name}`));
+            $("#insurance-flights").append($("<option />").val(flight.name).text(`${flight.name}: ${flight.from} to ${flight.to}`));
         }
-        $("#buy-insurance-section").show();
+    }
+
+    function displayAmIInsured(flights)
+    {
+        $("#flight-number-insured").find("option").remove().end().append($("<option />").val("-1").text("Select Flight..."));
+        for (let flight of flights) {
+            $("#flight-number-insured").append($("<option />").val(flight.name).text(`${flight.name}: ${flight.from} to ${flight.to}`));
+        }
     }
 
 

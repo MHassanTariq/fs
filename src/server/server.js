@@ -65,6 +65,13 @@ function listenmisc()
 
         console.log(`InsuranceBought ${result.passenger} ${result.name} ${result.key} ${result.amount}`);
     });
+
+    fsdata.events.PayableInsurance({fromBlock: 0}, (err, event) => {
+        if (err) { console.log(err); }
+        let result = event.returnValues;
+
+        console.log(`PayableInsurance ${result.passenger} ${result.name} ${result.amount}`);
+    });
 }
 
 

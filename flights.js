@@ -26,7 +26,7 @@ export default [{"name": "Flight 815", "isRegistered": true, "statusCode": 0,
   "timestamp": 1566500400, "address": "0x0d1d4e623D10F9FBA5Db95830F7d3839406C6AF2",
   "from": "ORD", "to": "BAH"
  },
- {"name": "Flight 523", "isRegistered": true, "statusCode": 0,
+ {"name": "Flight 923", "isRegistered": true, "statusCode": 0,
   "timestamp": 1566586800, "address": "0x0d1d4e623D10F9FBA5Db95830F7d3839406C6AF2",
   "from": "ORD", "to": "ASB"
  }]

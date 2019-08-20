@@ -73,7 +73,7 @@ export default class Contract {
     async isOperational(callback) {
         let self = this;
         self.flightSuretyApp.deployed().then((app) => {
-            return app.isOperational({from: self.owner}).then(callback);
+            return app.isOperational.call({from: self.owner}).then(callback);
         // await self.flightSuretyApp.isOperational()
             //     .call({ from: self.owner}, callback);
         });
@@ -109,7 +109,7 @@ export default class Contract {
         self.flightSuretyApp.deployed().then((app) => {
             return app.fetchFlightStatus(payload.airline, payload.flight, payload.timestamp, {from: accts[0], gas: self.config.gas})
                 .then(() => {
-                    return app.getFlightStatus(payload.airline, payload.flight, payload.timestamp, {from: accts[0], gas: self.config.gas});
+                    return app.getFlightStatus.call(payload.airline, payload.flight, payload.timestamp, {from: accts[0], gas: self.config.gas});
                 })
                 .then((result) => { console.log(this.statuses[result.toNumber()]);
                                     callback(null, `${flight} status: ${this.statuses[result.toNumber()]}`); })
@@ -157,7 +157,7 @@ export default class Contract {
         self.flightSuretyApp.deployed().then((app) => {
             return app.buyInsurance(payload.airline, payload.flight, payload.timestamp, {from: accts[0], value: value, gas: self.config.gas})
                 .then(() => {
-                    return app.insuredAmount(payload.airline, payload.flight, payload.timestamp, {from: accts[0]});
+                    return app.insuredAmount.call(payload.airline, payload.flight, payload.timestamp, {from: accts[0]});
                 })
                 .then((result) => {
                     console.log(result.toString());
@@ -166,6 +166,61 @@ export default class Contract {
                 .catch((error) => { console.log(error); callback(error, null); });
         });
     }
+
+    async insuredAmount(flight, callback) {
+        let name = flight.trim();
+        let self = this;
+        let payload = {
+            airline: null,
+            flight: flight,
+            timestamp: 0
+        };
+
+        let found = false;
+        for (let f of this.flights) {
+            if (f.name === name) {
+                payload.airline = f.address;
+                payload.timestamp = f.timestamp;
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            callback(`unknown flight: ${flight}`, payload);
+            return;
+        }
+
+        let accts = await window.ethereum.enable();
+        console.log(accts[0]);
+
+        self.flightSuretyApp.deployed().then((app) => {
+            return app.insuredAmount.call(payload.airline, payload.flight, payload.timestamp, {from: accts[0]})
+                .then((result) => {
+                    console.log(result.toString());
+                    return callback(null, `${result.toString()} wei of insurance on ${flight}`);
+                })
+                .catch((error) => { console.log(error); callback(error, null); });
+        });
+    }
+
+
+    async payPassenger(callback) {
+        let self = this;
+        let accts = await window.ethereum.enable();
+
+        console.log(accts[0]);
+
+        self.flightSuretyApp.deployed().then((app) => {
+            return app.payPassenger({from: accts[0], gas: this.config.gas})
+                .then(async (result) => {
+                    console.log(result.toString());
+                    return callback(null, `check your account balance`);
+                })
+                .catch((error) => { console.log(error); callback(error, null); });
+        });
+    }
+
 
     fetchFlights() {
         return this.flights;
