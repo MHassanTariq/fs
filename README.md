@@ -10,6 +10,13 @@ The software is built with
 * solidity 0.5.11
 * web3 1.2.1
 
+Additional libraries used:
+
+* truffle-contract 4.0.29
+* node-snackbar 0.1.15
+* jquery 3.4.1
+* axios 0.19.0
+
 The design is covered in another [document](design.md).
 
 ## Install
