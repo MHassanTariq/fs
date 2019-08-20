@@ -199,6 +199,12 @@ contract FlightSuretyApp {
         emit OracleRequest(index, airline, flight, timestamp);
     }
 
+    function getFlightStatus(address airline, string calldata flight, uint256 timestamp)
+        external view returns (uint8)
+    {
+        return dataContract.getFlightStatus(airline, flight, timestamp);
+    }
+
 
 // region ORACLE MANAGEMENT
 

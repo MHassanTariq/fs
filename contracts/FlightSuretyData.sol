@@ -381,6 +381,14 @@ contract FlightSuretyData {
         flights[key].statusCode = statusCode;
     }
 
+    function getFlightStatus(address airline, string calldata flight, uint256 timestamp)
+        external view returns (uint8)
+    {
+        bytes32 key = getFlightKey(airline, flight, timestamp);
+
+        return flights[key].statusCode;
+    }
+
     /**
      *  @dev Credits payouts to insurees
      */
