@@ -85,9 +85,10 @@ If three or more oracles reply to an `OracleRequest` event with the
 same flight status code, the flight's `statusCode` is updated in the
 data contract.
 
-The contract does not prevent passengers from repeatedly querying the
-oracles.  To change this behavior, uncomment the "DISABLED" line in the
-FlightSuretyApp contract.
+The contract prevents passengers from repeatedly querying the oracles
+repeatedly after the flight status has been processed.  This step makes
+manual testing tedious, so to change this behavior, comment out the marked
+line in submitOracleResponse(), in the FlightSuretyApp contract.
 
 ## Paying out
 
