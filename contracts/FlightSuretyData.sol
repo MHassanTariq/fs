@@ -37,8 +37,8 @@ contract FlightSuretyData {
     mapping(address => uint256) private votes;      // airlines in the queue and their votes
     mapping(address => address[]) private voters;   // list of voters for an airline
     uint256 public numAirlines;                     // number of airlines, registered or unregistered
-    uint256 private numRegisteredAirlines;           // number of registered airlines
-    uint256 private numFundedAirlines;               // number of funded airlines
+    uint256 public numRegisteredAirlines;           // number of registered airlines
+    uint256 public numFundedAirlines;               // number of funded airlines
 
     // funds, should match web3.eth.getBalance(data contract's account);
     uint256 private totalFunds;                     // total funds available

@@ -94,7 +94,8 @@ async function setupAirlines(req, res)
         }
     }
 
-    return res.json({status: "okay", "events": did}).end();
+    console.log(did);
+    if (res !== undefined) return res.json({status: "okay", "events": did}).end();
 }
 
 
@@ -108,7 +109,9 @@ async function setupFlights(req, res)
         console.log(`airline ${flight.address} flight: ${flight.name}`);
         did.push(`airline ${flight.address} flight: ${flight.name}`);
     }
-    return res.json({status: "okay", "events": did}).end();
+
+    console.log(did);
+    if (res !== undefined) return res.json({status: "okay", "events": did}).end();
 }
 
 // setup oracles and have them listen for events
@@ -141,7 +144,8 @@ async function setupOracles(req, res)
         });
     }
 
-    return res.json({status: "okay", "events": did}).end();
+    console.log(did);
+    if (res !== undefined) return res.json({status: "okay", "events": did}).end();
 }
 
 // start non-oracle listeners
