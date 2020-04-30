@@ -47,7 +47,7 @@
   "dependencies": {
     "axios": "^0.19.0",
     "cors": "^2.8.5",
-    "jquery": "^3.4.1",
+    "jquery": "^3.5.0",
     "node-snackbar": "^0.1.16",
     "random": "^2.1.1",
     "@truffle/contract": "^4.0.37"
