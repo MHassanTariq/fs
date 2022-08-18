@@ -21,6 +21,9 @@
     "@babel/plugin-proposal-class-properties": "^7.0.0-beta.46",
     "@babel/plugin-proposal-object-rest-spread": "^7.6.2",
     "@babel/preset-env": "^7.6.3",
+    "@openzeppelin/contracts": "^4.7.3",
+    "@truffle/contract": "^4.0.37",
+    "@truffle/hdwallet-provider": "^2.0.14",
     "babel-core": "6.26.3",
     "babel-loader": "^8.0.6",
     "babel-polyfill": "6.26.0",
@@ -28,15 +31,15 @@
     "babel-preset-stage-0": "6.24.1",
     "bignumber.js": "^9.0.0",
     "css-loader": "^3.2.0",
-    "eslint": "^6.6.0",
+    "eslint": "^8.22.0",
     "express": "^4.17.1",
     "file-loader": "^4.2.0",
+    "ganache": "^7.4.1",
     "html-loader": "0.5.5",
     "html-webpack-plugin": "^3.2.0",
-    "openzeppelin-solidity": "^2.4.0",
     "start-server-webpack-plugin": "2.2.5",
     "style-loader": "^1.0.0",
-    "superstatic": "^6.0.4",
+    "superstatic": "^8.0.0",
     "truffle": "^5.0.42",
     "web3": "^1.2.2",
     "webpack": "^4.41.2",
@@ -45,11 +48,10 @@
     "webpack-node-externals": "1.7.2"
   },
   "dependencies": {
-    "axios": "^0.21.2",
+    "axios": "^0.27.2",
     "cors": "^2.8.5",
     "jquery": "^3.5.0",
     "node-snackbar": "^0.1.16",
-    "random": "^2.1.1",
-    "@truffle/contract": "^4.0.37"
+    "random": "^3.0.6"
   }
 }
